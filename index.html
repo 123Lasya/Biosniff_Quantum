@@ -1,0 +1,741 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Bio-Sniff Quantum Optimization</title>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#060a13;--ln:rgba(130,190,255,.16);--tx:#dbe7f5;--mu:#7f93ad;--cl:#ffb454;--qu:#8fa2ff;--fm:#3be0c4;--hot:#ff6a3d}
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(1100px 600px at 15% -10%,#10213d 0,transparent 60%),radial-gradient(900px 500px at 100% 30%,#1a1240 0,transparent 55%),var(--bg);color:var(--tx);font:14px/1.5 Manrope,system-ui,sans-serif;min-height:100vh;padding:28px clamp(14px,4vw,56px) 80px}
+h1{font-size:clamp(24px,3.2vw,38px);font-weight:800;letter-spacing:-.02em;margin:0 0 16px;background:linear-gradient(90deg,#e8f4ff,var(--fm) 45%,var(--qu));-webkit-background-clip:text;background-clip:text;color:transparent}
+.box{background:rgba(255,255,255,.035);border:1px solid var(--ln);border-radius:14px;padding:16px;backdrop-filter:blur(6px)}
+.tabs{display:flex;gap:8px;margin:0 0 22px;flex-wrap:wrap}
+.tab{padding:11px 18px;border-radius:11px;font-size:14px}
+.tab[aria-selected=true]{background:linear-gradient(90deg,#0f6f66,#3a46b8);border-color:transparent;color:#fff;box-shadow:0 0 18px rgba(80,120,255,.3)}
+.uc{display:none}.uc.on{display:block}
+.inp{display:grid;grid-template-columns:300px 1fr;gap:18px;align-items:stretch}
+label{display:block;color:var(--mu);font-size:12px;margin:0 0 4px}
+input[type=number],select{width:100%;background:#0a1222;border:1px solid var(--ln);color:var(--tx);border-radius:8px;padding:8px 10px;font:600 15px 'JetBrains Mono',monospace;margin-bottom:12px}
+select{font:600 13px Manrope,sans-serif}
+input[disabled],input[readonly]{opacity:.65}
+textarea{width:100%;height:100%;min-height:230px;background:#0a1222;border:1px solid var(--ln);border-radius:10px;color:#9fe8d8;font:12px/1.5 'JetBrains Mono',monospace;padding:12px;resize:vertical}
+button{background:#0d1a30;color:var(--tx);border:1px solid var(--ln);border-radius:9px;padding:9px 16px;font:600 13px Manrope,sans-serif;cursor:pointer;transition:.2s}
+button:hover{border-color:var(--fm);box-shadow:0 0 14px rgba(59,224,196,.25)}
+button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:2px solid var(--fm);outline-offset:2px}
+.run{width:100%;padding:13px;font-size:15px;background:linear-gradient(90deg,#0f6f66,#3a46b8);border-color:transparent;box-shadow:0 0 22px rgba(80,120,255,.3)}
+.err{color:#ff8a8a;font-size:12px;min-height:18px;margin-top:8px}
+.sec{display:none;margin-top:26px}.sec.on{display:block;animation:fi .9s ease}
+@keyframes fi{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.bar{display:flex;gap:10px;align-items:center;margin-bottom:12px;flex-wrap:wrap}
+.phase{margin-left:auto;color:var(--fm);font-weight:600}
+canvas{width:100%;height:auto;display:block;border-radius:10px;background:rgba(5,9,18,.7);border:1px solid var(--ln)}
+.mono{font-family:'JetBrains Mono',monospace}
+.lab{text-align:center;color:var(--fm);font-weight:800;letter-spacing:.06em;margin-bottom:4px}
+.fm{text-align:center;color:var(--mu);font-size:12px;margin-bottom:14px}
+.cmp{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.cmp h2{margin:0 0 10px;font-size:15px;letter-spacing:.08em}
+.cl{border-color:rgba(255,180,84,.35)}.cl h2{color:var(--cl)}
+.qu{border-color:rgba(170,190,255,.85);box-shadow:0 0 44px rgba(110,150,255,.28)}.qu h2{color:var(--qu)}
+.ro{min-height:250px;font-size:13px;margin-bottom:10px}
+.ro .big{font:600 20px 'JetBrains Mono',monospace}
+.pb{display:grid;grid-template-columns:96px 1fr 58px;gap:8px;align-items:center;margin:4px 0;font-size:12px}
+.pb.w{grid-template-columns:150px 1fr 64px}
+.tr{height:7px;background:#0c1730;border-radius:5px;overflow:hidden}.tr i{display:block;height:100%;width:0}
+.pb .tr{background:#1b2a66}.pb .tr i{background:linear-gradient(90deg,#a56bff,#19e6ff,#fff);box-shadow:0 0 12px #19e6ff}
+.win{color:#fff;text-shadow:0 0 12px currentColor}
+.res{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+.res .box{padding:22px}.res .t{font:600 clamp(28px,4.4vw,48px)/1 'JetBrains Mono',monospace;margin:8px 0 6px}
+.res .sub{color:var(--mu);font-size:12px;margin-bottom:12px}
+.kv{display:flex;justify-content:space-between;gap:14px;color:var(--mu);border-top:1px solid var(--ln);padding:6px 0;font-size:13px}.kv b{color:var(--tx);font-family:'JetBrains Mono',monospace;font-weight:600;text-align:right}
+.note{color:var(--mu);font-size:11.5px;text-align:center;margin-top:12px;line-height:1.5}
+.vs{display:grid;grid-template-columns:1fr auto 1fr;text-align:center;align-items:center;margin-bottom:14px}.vc{font-weight:800;font-size:clamp(18px,2.4vw,26px);letter-spacing:.06em}.vc small{display:block;font-size:13px;font-weight:600;color:var(--mu);letter-spacing:0}.vv{color:var(--mu);padding:0 18px}
+.chips{display:flex;flex-wrap:wrap;gap:4px;align-items:center;margin-bottom:10px;font-size:11px}.chips span{padding:3px 8px;border:1px solid var(--ln);border-radius:20px;color:var(--mu);transition:.25s}.chips i{color:var(--mu);font-style:normal}
+.cch span.a{color:#fff;border-color:var(--cl);background:rgba(255,180,84,.2);box-shadow:0 0 10px rgba(255,180,84,.4)}.qch span.a{color:#fff;border-color:var(--qu);background:rgba(143,162,255,.22);box-shadow:0 0 10px rgba(143,162,255,.5)}
+.sp{display:grid;grid-template-columns:1.2fr 1fr;gap:12px;margin-top:12px}.sp .ro{margin:0}.sp canvas{align-self:start}
+.st{width:100%;border-collapse:collapse;font-size:12.5px;margin:6px 0}.st td,.st th{padding:2px 6px;text-align:right}.st td:first-child,.st th:first-child{text-align:left;color:var(--mu)}.st th{color:var(--mu);font-weight:400}
+.lst{min-height:120px;margin-top:6px}.lst div{display:flex;justify-content:space-between;padding:2px 8px;border-radius:6px;font-size:12px;transition:.2s}.lst .d{opacity:.4}.lst .p{color:var(--mu)}.lst .c{background:rgba(255,180,84,.2);color:#fff;box-shadow:0 0 10px rgba(255,180,84,.45)}
+.qc{background:#070b2e}
+.mxbox{margin-bottom:16px;padding:12px 16px}.mxg{overflow:auto;max-height:190px;font-size:12px}
+.mxt{border-collapse:collapse;min-width:100%}.mxt th,.mxt td{padding:2px 8px;text-align:right;white-space:nowrap;color:#aebfd6}.mxt th{color:var(--mu);font-weight:600;position:sticky;top:0;background:#0b1424}.mxt th:first-child{left:0;z-index:2;text-align:left}.mxt .cur{background:rgba(255,180,84,.22);color:#fff}
+.fbox{margin-bottom:16px;font-size:12.5px;line-height:1.7}.fbox .mono{color:#9fe8d8}
+/* use case 2 */
+.cfg{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:0 14px;align-items:end}
+.cfg input{margin-bottom:10px}
+.kvg{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px 14px;margin-bottom:10px}.kvg div{border-top:1px solid var(--ln);padding-top:5px}.kvg span{display:block;color:var(--mu);font-size:11px;letter-spacing:.05em}.kvg b{font:600 13px 'JetBrains Mono',monospace}
+.fml{background:#0a1222;border:1px solid var(--ln);border-radius:9px;padding:9px 12px;font-size:12px;line-height:1.7;overflow-x:auto;white-space:pre-wrap;color:#cfe9ff;margin:8px 0}
+.note2{color:var(--mu);font-size:11.5px;line-height:1.5}
+.legend{display:flex;flex-wrap:wrap;gap:6px 18px;margin-top:10px;font-size:12px;color:var(--mu)}.legend span{display:flex;align-items:center;gap:6px}.legend svg{flex:none}
+.two>*,.cmp>*,.res>*,.sp>*,.inp>*{min-width:0}.two{display:grid;grid-template-columns:1.25fr 1fr;gap:16px}
+.dtw{max-height:230px;overflow:auto;border:1px solid var(--ln);border-radius:9px;margin-top:8px}.dt{border-collapse:collapse;width:100%;font-size:11.5px}.dt th,.dt td{padding:2px 8px;text-align:right;white-space:nowrap;color:#aebfd6}.dt th{position:sticky;top:0;background:#0b1424;color:var(--mu);font-weight:600}.dt td:first-child,.dt th:first-child{text-align:left;color:var(--mu)}
+.chip2{display:inline-block;padding:2px 10px;border-radius:20px;font-size:12px;font-weight:700;border:1px solid var(--ln)}
+.chip2.run{width:auto;padding:2px 10px;font-size:12px;background:rgba(59,224,196,.15);border-color:var(--fm);color:var(--fm);box-shadow:none}.chip2.ok{background:rgba(59,224,196,.15);border-color:var(--fm);color:var(--fm)}.chip2.to{background:rgba(255,106,61,.18);border-color:var(--hot);color:#ffb08f}
+.prog{height:8px;border-radius:5px;background:#0c1730;overflow:hidden;margin:8px 0}.prog i{display:block;height:100%;width:0;background:linear-gradient(90deg,#ff9a3d,#ffd08a)}
+.tm{width:100%;border-collapse:collapse;font-size:12.5px}.tm td{border-top:1px solid var(--ln);padding:7px 6px;vertical-align:top}.tm td:first-child{color:var(--tx);font-weight:600;width:32%}.tm td:last-child{color:var(--mu)}.tm b{font-family:'JetBrains Mono',monospace;color:#fff}
+.good{color:var(--fm)}.bad{color:#ff8f6b}
+@media(max-width:900px){.two>*,.cmp>*,.res>*,.sp>*,.inp>*{min-width:0}.inp,.cmp,.res,.sp,.two{grid-template-columns:1fr}.vs{grid-template-columns:1fr}.vv{display:none}}
+@media(prefers-reduced-motion:reduce){.sec.on{animation:none}}
+</style></head><body>
+<h1>Bio-Sniff Quantum Optimization</h1>
+<div class="tabs" role="tablist" aria-label="Use cases">
+ <button class="tab" id="tab1" role="tab" aria-selected="true" aria-controls="uc1">Use Case 1 · Disease-Source Localization</button>
+ <button class="tab" id="tab2" role="tab" aria-selected="false" aria-controls="uc2">Use Case 2 · Sensor Placement</button>
+</div>
+
+<!-- ===================== USE CASE 1 : SOURCE LOCALIZATION ===================== -->
+<div class="uc on" id="uc1" role="tabpanel" aria-labelledby="tab1">
+<section class="inp">
+ <div class="box">
+  <label for="zm">Zone layout</label><select id="zm"><option value="grid">2 m × 2 m square zones</option><option value="cluster">Clustered zones (original layout)</option></select>
+  <label for="nz">Number of zones (clustered layout only)</label><input id="nz" type="number" min="2" max="100" value="8">
+  <label for="ms">Maximum sources to localize</label><input id="ms" type="number" min="1" max="4" value="2">
+  <label for="qn">QAOA qubits (zone subset)</label><input id="qn" type="number" min="4" max="12" value="10">
+  <label for="qp">QAOA layers p</label><input id="qp" type="number" min="1" max="3" value="2">
+  <button id="run1" class="run">Run Localization</button><div id="err" class="err"></div>
+ </div>
+ <textarea id="json" spellcheck="false" aria-label="Farm input JSON">{
+  "farm_boundary": [[0,0],[24,0],[24,16],[0,16]],
+  "zone_size_m": 2,
+  "node_1_coordinates": [17,5],
+  "node_2_coordinates": [21,12],
+  "node_3_coordinates": [10,9],
+  "sensor_response_strength": 1.0,
+  "wind_speed_mps": 3.2,
+  "wind_direction_deg": 25
+}</textarea>
+</section>
+
+<section class="sec" id="stage">
+ <div class="bar"><span id="phase" class="phase mono"></span></div>
+ <canvas id="farm" width="900" height="560"></canvas>
+</section>
+
+<section class="sec" id="cmp">
+ <div class="box fbox" id="fbox"></div>
+ <div class="vs"><div class="vc" style="color:var(--cl)">CLASSICAL<small>Exhaustive reference search</small></div><div class="vv">vs.</div><div class="vc" style="color:var(--qu)">QUANTUM<small>QAOA statevector simulation (reduced subset)</small></div></div>
+ <div class="box mxbox"><div class="lab">INFLUENCE MATRIX A · rows = sensor nodes · columns = source zones</div><div id="mxg" class="mxg mono"></div></div>
+ <div class="lab">MINIMIZE  ‖Y − AX‖² + λΣxᵢ</div>
+ <div class="fm mono">SOURCE CONFIGURATIONS (1…K sources): <b id="tot" style="color:var(--tx)"></b> · same influence matrix · λ = 0.01</div>
+ <div class="cmp">
+  <div class="box cl"><h2>CLASSICAL OPTIMIZATION</h2>
+   <div class="chips cch" id="cch"><span>State</span><i>→</i><span>Calculate AX</span><i>→</i><span>Cost</span><i>→</i><span>Next state</span><i>→</i><span>Best</span></div>
+   <canvas id="cf" width="900" height="560"></canvas>
+   <div class="sp"><div class="ro" id="cro"></div><canvas id="cc" width="440" height="420"></canvas></div></div>
+  <div class="box qu"><h2>QUANTUM OPTIMIZATION · QAOA</h2>
+   <div class="chips qch" id="qch"><span>Initialize |+⟩</span><i>→</i><span>Cost layer e<sup>−iγC</sup></span><i>→</i><span>Mixer e<sup>−iβX</sup></span><i>→</i><span>Optimized (γ*,β*)</span><i>→</i><span>Measure</span></div>
+   <canvas id="qf" width="900" height="560"></canvas>
+   <div class="sp"><div class="ro" id="qro"></div><canvas id="qc" class="qc" width="440" height="420"></canvas></div></div>
+ </div>
+</section>
+
+<section class="sec" id="res">
+ <div class="res">
+  <div class="box" style="border-color:rgba(255,180,84,.4)" id="rc"></div>
+  <div class="box" style="border-color:rgba(143,162,255,.45)" id="rq"></div>
+ </div>
+ <div class="box" id="obs"></div>
+ <div class="note">Runtimes are measured in this browser. The QAOA side is a classical statevector simulation of a reduced zone subset — it is not a quantum-hardware benchmark and no speed-up is claimed.</div>
+</section>
+</div>
+
+<!-- ===================== USE CASE 2 : SENSOR PLACEMENT ===================== -->
+<div class="uc" id="uc2" role="tabpanel" aria-labelledby="tab2">
+<section class="box">
+ <div class="cfg">
+  <div><label for="u2w">Farm width (m)</label><input id="u2w" type="number" min="8" max="400" step="0.1" value="72"></div>
+  <div><label for="u2h">Farm height (m)</label><input id="u2h" type="number" min="8" max="400" step="0.1" value="56.2"></div>
+  <div><label for="u2a">Farm area (auto)</label><input id="u2a" readonly aria-readonly="true" style="width:100%;background:#0a1222;border:1px solid var(--ln);color:var(--tx);border-radius:8px;padding:8px 10px;font:600 13px 'JetBrains Mono',monospace;margin-bottom:10px"></div>
+  <div><label for="u2s">Candidate spacing (m)</label><input id="u2s" type="number" min="1" max="50" step="0.5" value="4"></div>
+  <div><label for="u2n">Required sensors</label><input id="u2n" type="number" value="3" disabled></div>
+  <div><label for="u2d">Min. sensor separation (m)</label><input id="u2d" type="number" min="0" max="200" step="0.5" value="12"></div>
+  <div><label for="u2to">Classical timeout (s)</label><input id="u2to" type="number" min="0.01" max="600" step="0.1" value="10"></div>
+  <div><label for="u2sc">Scenarios (source+wind)</label><input id="u2sc" type="number" min="2" max="16" value="8"></div>
+  <div><label for="u2q">QAOA qubits (subset)</label><input id="u2q" type="number" min="6" max="14" value="12"></div>
+  <div><label for="u2p">QAOA layers p</label><input id="u2p" type="number" min="1" max="3" value="2"></div>
+ </div>
+ <button id="run2" class="run" style="max-width:340px">Run Simulation</button><div id="err2" class="err"></div>
+</section>
+
+<section class="sec" id="u2stage">
+ <div class="bar"><b>Farm &amp; candidate sensor positions</b><span id="u2phase" class="phase mono"></span></div>
+ <div class="box" id="u2stats" style="margin-bottom:14px"></div>
+ <canvas id="f2" width="960" height="720"></canvas>
+ <div class="legend" id="u2leg">
+  <span><svg width="16" height="16"><circle cx="8" cy="8" r="3" fill="#6fa8c8"/></svg>candidate position</span>
+  <span><svg width="16" height="16"><circle cx="8" cy="8" r="5" fill="#19e6ff" stroke="#fff" stroke-width="1"/></svg>reduced QAOA subset</span>
+  <span><svg width="16" height="16"><circle cx="8" cy="8" r="6" fill="none" stroke="#ffb454" stroke-width="2" stroke-dasharray="3 2"/></svg>classical: combination being evaluated</span>
+  <span><svg width="16" height="16"><rect x="2" y="2" width="12" height="12" fill="rgba(255,180,84,.3)" stroke="#ffb454" stroke-width="2"/></svg>classical best feasible</span>
+  <span><svg width="16" height="16"><circle cx="8" cy="8" r="6.5" fill="rgba(160,110,255,.35)" stroke="#fff" stroke-width="2"/><circle cx="8" cy="8" r="2" fill="#fff"/></svg>QAOA best feasible</span>
+ </div>
+</section>
+
+<section class="sec" id="u2mid">
+ <div class="two">
+  <div class="box" id="u2det"></div>
+  <div class="box" id="u2qubo"></div>
+ </div>
+</section>
+
+<section class="sec" id="u2cmp">
+ <div class="cmp">
+  <div class="box cl"><h2>CLASSICAL · EXHAUSTIVE REFERENCE (hard timeout)</h2>
+   <canvas id="cf2" width="620" height="480"></canvas><div class="ro" id="c2info" style="margin-top:10px;min-height:190px"></div></div>
+  <div class="box qu"><h2>QUANTUM · QAOA STATE SPACE (reduced subset)</h2>
+   <canvas id="qf2" width="620" height="480"></canvas>
+   <div class="sp"><div class="ro" id="q2info" style="min-height:190px"></div><canvas id="qs2" class="qc" width="400" height="340"></canvas></div></div>
+ </div>
+</section>
+
+<section class="sec" id="u2res"><div id="u2resbox"></div></section>
+</div>
+
+<script id="core">
+const Core=(()=>{
+const now=()=>performance.now();
+const rng=s=>()=>{s|=0;s=s+0x6D2B79F5|0;let t=Math.imul(s^s>>>15,1|s);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296};
+const choose=(n,k)=>{let r=1n;for(let i=0;i<k;i++)r=r*BigInt(n-i)/BigInt(i+1);return r};
+const popcount=x=>{let c=0;while(x){x&=x-1;c++}return c};
+
+/* ---------- human-readable durations ---------- */
+function fmtDur(ms){
+ if(!isFinite(ms))return '—';
+ if(ms<1){const us=ms*1000;return us<1?'<1 µs':Math.round(us)+' µs'}
+ if(ms<1000)return (ms<10?ms.toFixed(1):Math.round(ms))+' ms';
+ const s=ms/1000,pl=(v,u)=>v+' '+u+(v==1?'':'s');
+ if(s<60)return (s<10?s.toFixed(1):Math.round(s))+' seconds';
+ if(s<3600){let m=Math.floor(s/60),r=Math.round(s-m*60);if(r==60){m++;r=0}return pl(m,'minute')+(r?' '+pl(r,'second'):'')}
+ if(s<86400){let h=Math.floor(s/3600),m=Math.round((s-h*3600)/60);if(m==60){h++;m=0}return pl(h,'hour')+(m?' '+pl(m,'minute'):'')}
+ const dd=s/86400;
+ if(dd<365){let d=Math.floor(dd),h=Math.round((s-d*86400)/3600);if(h==24){d++;h=0}return pl(d,'day')+(h?' '+pl(h,'hour'):'')}
+ const y=dd/365.25;return (y<10?y.toFixed(1):Math.round(y).toLocaleString('en-US'))+' years'}
+
+/* ---------- Use case 2: candidate grid ---------- */
+// origin = south-west corner, x=c*s (0<=x<=W), y=r*s (0<=y<=H); boundary points included; IDs in reading order (top-left first)
+function buildCandidates(W,H,s){
+ const cols=Math.floor(W/s+1e-9)+1,rows=Math.floor(H/s+1e-9)+1,pts=[];let id=1;
+ for(let r=rows-1;r>=0;r--)for(let c=0;c<cols;c++)pts.push({id:id++,x:c*s,y:r*s});
+ return{pts,cols,rows,N:pts.length}}
+
+/* ---------- Use case 2: scenarios + simplified plume-inspired detection score ---------- */
+function genScenarios(S,W,H,seed){const R=rng(seed),o=[];
+ for(let j=0;j<S;j++)o.push({sx:+(W*(.12+.76*R())).toFixed(1),sy:+(H*(.12+.76*R())).toFixed(1),deg:Math.round((360*j/S+(R()-.5)*30+360)%360),u:+(1.5+3.5*R()).toFixed(1)});
+ return o}
+// wind blows TOWARD bearing deg (counter-clockwise from +x). al = along-wind distance, cr = cross-wind distance.
+function detScore(px,py,s){const a=s.deg*Math.PI/180,wx=Math.cos(a),wy=Math.sin(a),dx=px-s.sx,dy=py-s.sy,al=dx*wx+dy*wy,cr=-dx*wy+dy*wx,
+ sg=2.5+.22*Math.max(al,0),dec=al<0?Math.exp(al/3):Math.exp(-al/(14+6*s.u));
+ return Math.min(1,Math.exp(-cr*cr/(2*sg*sg))*dec)}
+
+function buildModel(pts,scen,dmin,spacing,o={}){
+ const mu=o.mu??.6,nu=o.nu??4,N=pts.length,S=scen.length,D=new Float64Array(N*S),L=new Float64Array(N),norm=new Float64Array(N);
+ for(let i=0;i<N;i++){let s=0,q=0;for(let j=0;j<S;j++){const v=detScore(pts[i].x,pts[i].y,scen[j]);D[i*S+j]=v;s+=v;q+=v*v}L[i]=s/S;norm[i]=Math.sqrt(q)}
+ const CP=new Float64Array(N*N),R=new Float64Array(N*N),SEP=new Uint8Array(N*N);let maxCP=0,maxL=0,nsep=0;
+ for(let i=0;i<N;i++){maxL=Math.max(maxL,L[i]);for(let k=i+1;k<N;k++){let d=0;for(let j=0;j<S;j++)d+=D[i*S+j]*D[k*S+j];
+  const cp=d/S,nn=norm[i]*norm[k];CP[i*N+k]=cp;R[i*N+k]=nn>1e-12?d/nn:0;maxCP=Math.max(maxCP,cp);
+  const dist=Math.hypot(pts[i].x-pts[k].x,pts[i].y-pts[k].y);if(dist<dmin){SEP[i*N+k]=1;nsep++}}}
+ // cardinality weight: must exceed the largest saving obtainable by dropping one sensor (pair terms) or gain by adding one (coverage)
+ const P=Math.ceil((1+maxL+2*(maxCP+mu+(nsep?nu:0)))*10)/10;
+ return{pts,N,S,D,L,CP,R,SEP,mu,nu,P,dmin,spacing,maxCP,nsep,scen}}
+
+// Direct (reference) objective on any index set, computed from D and coordinates (NOT from the precomputed matrices)
+function terms(M,idx){const{D,S,pts,mu,nu,P,dmin}=M,m=idx.length;let cov=0;
+ for(let j=0;j<S;j++){let s=0,pr=0;for(let a=0;a<m;a++){s+=D[idx[a]*S+j];for(let b=a+1;b<m;b++)pr+=D[idx[a]*S+j]*D[idx[b]*S+j]}cov+=s-pr}cov/=S;
+ let rho=0,nsv=0,minD=Infinity;
+ for(let a=0;a<m;a++)for(let b=a+1;b<m;b++){let d=0,na=0,nb=0;for(let j=0;j<S;j++){const u=D[idx[a]*S+j],v=D[idx[b]*S+j];d+=u*v;na+=u*u;nb+=v*v}
+  rho+=na*nb>1e-24?d/Math.sqrt(na*nb):0;const dist=Math.hypot(pts[idx[a]].x-pts[idx[b]].x,pts[idx[a]].y-pts[idx[b]].y);minD=Math.min(minD,dist);if(dist<dmin)nsv++}
+ const red=mu*rho,sep=nu*nsv,card=P*(m-3)**2,cost=-cov+red+sep+card;
+ return{cov,red,sep,card,cost,m,nsv,minD,feasible:m===3&&nsv===0}}
+
+/* ---------- Resumable exhaustive search over all C(N,3) triples ---------- */
+function makeSearch(M){const{N,L,CP,R,SEP,mu,nu}=M;let a=0,b=1,c=2,count=0,done=N<3;
+ const st={count:0,done,best:{cost:Infinity,ids:null},bestF:{cost:Infinity,ids:null},cur:[0,1,2],curCost:0,feasCount:0};
+ st.run=function(budgetMs){const t0=now();let k=0,la=a,lb=b,lc=c,lcost=st.curCost;
+  while(!done){const ia=a*N,ib=b*N,sv=SEP[ia+b]+SEP[ia+c]+SEP[ib+c];
+   const cost=-(L[a]+L[b]+L[c]-CP[ia+b]-CP[ia+c]-CP[ib+c])+mu*(R[ia+b]+R[ia+c]+R[ib+c])+nu*sv;
+   count++;la=a;lb=b;lc=c;lcost=cost;
+   if(cost<st.best.cost){st.best.cost=cost;st.best.ids=[a,b,c]}
+   if(sv===0){st.feasCount++;if(cost<st.bestF.cost){st.bestF.cost=cost;st.bestF.ids=[a,b,c]}}
+   c++;if(c>=N){b++;c=b+1;if(b>=N-1){a++;b=a+1;c=b+1;if(a>=N-2)done=true}}
+   if((++k&1023)===0&&now()-t0>=budgetMs)break}
+  st.count=count;st.cur=[la,lb,lc];st.curCost=lcost;st.done=done;return done};
+ return st}
+
+/* ---------- QUBO / Ising ---------- */
+// subset = sorted global candidate indices; returns C(x)=sum c_i x_i + sum_{i<k} Q_ik x_i x_k + const   (Q stored symmetric, zero diagonal; pair term counted once)
+function buildQUBO(M,sub){const n=sub.length,{N,L,CP,R,SEP,mu,nu,P}=M,c=new Float64Array(n),Q=new Float64Array(n*n);
+ for(let i=0;i<n;i++){c[i]=-L[sub[i]]-5*P;for(let k=i+1;k<n;k++){const a=Math.min(sub[i],sub[k]),b=Math.max(sub[i],sub[k]);
+  const q=CP[a*N+b]+mu*R[a*N+b]+nu*SEP[a*N+b]+2*P;Q[i*n+k]=q;Q[k*n+i]=q}}
+ return{n,c,Q,konst:9*P,sub}}
+// source localization: min ||Y-AX||^2 + lam*sum x
+function buildLocQUBO(A,Y,lam,zones){const n=zones.length,c=new Float64Array(n),Q=new Float64Array(n*n);let k0=0;for(const y of Y)k0+=y*y;
+ for(let i=0;i<n;i++){let s=0;for(let j=0;j<Y.length;j++)s+=-2*A[zones[i]][j]*Y[j]+A[zones[i]][j]**2;c[i]=s+lam;
+  for(let k=i+1;k<n;k++){let q=0;for(let j=0;j<Y.length;j++)q+=2*A[zones[i]][j]*A[zones[k]][j];Q[i*n+k]=q;Q[k*n+i]=q}}
+ return{n,c,Q,konst:k0,sub:zones}}
+function quboEnergy(q,mask){const{n,c,Q,konst}=q;let e=konst;for(let i=0;i<n;i++)if(mask>>i&1){e+=c[i];for(let k=i+1;k<n;k++)if(mask>>k&1)e+=Q[i*n+k]}return e}
+// x_i=(1-z_i)/2 : E = offset + sum h_i z_i + sum_{i<k} J_ik z_i z_k
+function isingFromQubo(q){const{n,c,Q,konst}=q,h=new Float64Array(n),J=new Float64Array(n*n);let off=konst;
+ for(let i=0;i<n;i++){h[i]=-c[i]/2;off+=c[i]/2;for(let k=0;k<n;k++)if(k!==i)h[i]-=Q[i*n+k]/4;
+  for(let k=i+1;k<n;k++){J[i*n+k]=Q[i*n+k]/4;off+=Q[i*n+k]/4}}
+ return{n,h,J,off}}
+function isingDiag(is){const{n,h,J,off}=is,NS=1<<n,d=new Float64Array(NS),z=new Int8Array(n);
+ for(let m=0;m<NS;m++){let e=off;for(let i=0;i<n;i++)z[i]=(m>>i&1)?-1:1;
+  for(let i=0;i<n;i++){e+=h[i]*z[i];if(z[i]!==0)for(let k=i+1;k<n;k++)e+=J[i*n+k]*z[i]*z[k]}d[m]=e}
+ return d}
+
+/* ---------- QAOA statevector simulator (classical simulation) with CVaR objective + Nelder-Mead ---------- */
+async function qaoa(diag,n,p,o={}){
+ const NS=1<<n,yf=o.yieldFn||(async()=>{}),alpha=o.alpha||.2,starts=o.starts||4,iters=o.iters||45,R=rng(o.seed||11),d=2*p;
+ let mean=0;for(let i=0;i<NS;i++)mean+=diag[i];mean/=NS;let sd=0;for(let i=0;i<NS;i++)sd+=(diag[i]-mean)**2;sd=Math.sqrt(sd/NS)||1;
+ const Cs=new Float64Array(NS);for(let i=0;i<NS;i++)Cs[i]=(diag[i]-mean)/sd;
+ const order=Uint32Array.from({length:NS},(_,i)=>i).sort((a,b)=>diag[a]-diag[b]);
+ const re=new Float64Array(NS),im=new Float64Array(NS),a0=1/Math.sqrt(NS);
+ const probs=()=>{const o=new Float64Array(NS);for(let i=0;i<NS;i++)o[i]=re[i]*re[i]+im[i]*im[i];return o};
+ function evolve(par,snaps){re.fill(a0);im.fill(0);
+  for(let l=0;l<p;l++){const g=par[2*l],b=par[2*l+1];
+   for(let i=0;i<NS;i++){const ph=-g*Cs[i],c=Math.cos(ph),s=Math.sin(ph),r=re[i],m=im[i];re[i]=r*c-m*s;im[i]=r*s+m*c}
+   const cb=Math.cos(b),sb=Math.sin(b);
+   for(let q=0;q<n;q++){const bit=1<<q;for(let i=0;i<NS;i++){if(i&bit)continue;const j=i|bit,ar=re[i],ai=im[i],br=re[j],bi=im[j];
+    re[i]=cb*ar+sb*bi;im[i]=cb*ai-sb*br;re[j]=cb*br+sb*ai;im[j]=cb*bi-sb*ar}}
+   if(snaps)snaps.push(probs())}}
+ function cvar(par){evolve(par);let acc=0,rem=alpha;for(let k=0;k<NS;k++){const i=order[k],pr=re[i]*re[i]+im[i]*im[i];if(pr>=rem){acc+=rem*Cs[i];rem=0;break}acc+=pr*Cs[i];rem-=pr}return acc/alpha}
+ let evals=0,gBest=null,gVal=Infinity,acc=0,seg=now(),hist=[];
+ const f=x=>{evals++;return cvar(x)};
+ const lap=()=>{const t=now();acc+=t-seg;seg=t};
+ for(let s=0;s<starts;s++){
+  const x0=[];for(let l=0;l<p;l++){x0.push(s==0?.5*(l+1)/p:.1+1.0*R());x0.push(s==0?.6*(1-(l+.5)/p):.1+.7*R())}
+  let sim=[x0];for(let i=0;i<d;i++){const y=x0.slice();y[i]+=.3;sim.push(y)}let fv=sim.map(f);
+  for(let it=0;it<iters;it++){
+   const ord=fv.map((_,i)=>i).sort((a,b)=>fv[a]-fv[b]);sim=ord.map(i=>sim[i]);fv=ord.map(i=>fv[i]);
+   if(fv[0]<gVal){gVal=fv[0];gBest=sim[0].slice()}
+   const cen=new Array(d).fill(0);for(let i=0;i<d;i++)for(let k=0;k<d;k++)cen[k]+=sim[i][k]/d;
+   const w=sim[d],xr=cen.map((c,k)=>c+(c-w[k])),fr=f(xr);
+   if(fr<fv[0]){const xe=cen.map((c,k)=>c+2*(c-w[k])),fe=f(xe);if(fe<fr){sim[d]=xe;fv[d]=fe}else{sim[d]=xr;fv[d]=fr}}
+   else if(fr<fv[d-1]){sim[d]=xr;fv[d]=fr}
+   else{const base=fr<fv[d]?xr:w,xc=cen.map((c,k)=>c+.5*(base[k]-c)),fc=f(xc);
+    if(fc<Math.min(fr,fv[d])){sim[d]=xc;fv[d]=fc}else for(let i=1;i<=d;i++){sim[i]=sim[i].map((v,k)=>sim[0][k]+.5*(v-sim[0][k]));fv[i]=f(sim[i])}}
+   hist.push(Math.min(gVal,...fv));
+   if(now()-seg>25){lap();await yf({evals,best:gVal,start:s,starts,it,iters,getProbs:()=>{evolve(gBest||sim[0]);return probs()}});seg=now()}}
+  const bi=fv.indexOf(Math.min(...fv));if(fv[bi]<gVal){gVal=fv[bi];gBest=sim[bi].slice()}}
+ const snaps=[];const u=new Float64Array(NS).fill(1/NS);snaps.push(u);evolve(gBest,snaps);lap();
+ const fin=snaps[snaps.length-1];let ex=0;for(let i=0;i<NS;i++)ex+=fin[i]*diag[i];
+ return{params:gBest,cvar:gVal,snaps,final:fin,expectation:ex,evals,hist,simMs:acc,alpha}}
+
+function sampleShots(probs,shots,seed){const R=rng(seed||3),NS=probs.length,cum=new Float64Array(NS);let s=0;for(let i=0;i<NS;i++){s+=probs[i];cum[i]=s}
+ const m=new Map();for(let t=0;t<shots;t++){const r=R()*s;let lo=0,hi=NS-1;while(lo<hi){const mid=(lo+hi)>>1;if(cum[mid]<r)lo=mid+1;else hi=mid}m.set(lo,(m.get(lo)||0)+1)}return m}
+function topK(probs,k){const idx=[];for(let i=0;i<probs.length;i++){if(idx.length<k||probs[i]>probs[idx[idx.length-1]]){let j=idx.length;idx.push(i);while(j>0&&probs[idx[j-1]]<probs[i]){idx[j]=idx[j-1];j--}idx[j]=i;if(idx.length>k)idx.pop()}}return idx}
+// reduced quantum subset: highest single-position coverage, spatially spread (>= max(spacing,dmin/2)) so the subset is not one cluster
+function pickSubset(M,n,dmin){const{N,L,pts,spacing}=M,ord=[...Array(N).keys()].sort((a,b)=>L[b]-L[a]),th=Math.max(spacing,dmin/2),sel=[];
+ for(const i of ord){if(sel.length>=n)break;if(sel.every(j=>Math.hypot(pts[i].x-pts[j].x,pts[i].y-pts[j].y)>=th-1e-9))sel.push(i)}
+ for(const i of ord){if(sel.length>=n)break;if(!sel.includes(i))sel.push(i)}
+ return sel.sort((a,b)=>a-b)}
+return{rng,choose,popcount,fmtDur,buildCandidates,genScenarios,detScore,buildModel,terms,makeSearch,buildQUBO,buildLocQUBO,quboEnergy,isingFromQubo,isingDiag,qaoa,sampleShots,topK,pickSubset}})();
+</script>
+<script>
+const {rng,choose:Cb,popcount,fmtDur}=Core;
+const $=id=>document.getElementById(id),clamp=(v,a=0,b=1)=>Math.min(b,Math.max(a,v)),sm=x=>x*x*(3-2*x);
+const sleep=ms=>new Promise(r=>setTimeout(r,ms)),tick=()=>new Promise(r=>setTimeout(r,0));
+const fc=$('farm').getContext('2d'),cc=$('cc').getContext('2d'),qc=$('qc').getContext('2d'),cf=$('cf').getContext('2d'),qf=$('qf').getContext('2d');
+const zcv=document.createElement('canvas');zcv.width=225;zcv.height=140;const zx=zcv.getContext('2d'),img=zx.createImageData(225,140);
+function pip(x,y,p){let r=false;for(let i=0,j=p.length-1;i<p.length;j=i++){if((p[i][1]>y)!=(p[j][1]>y)&&x<(p[j][0]-p[i][0])*(y-p[i][1])/(p[j][1]-p[i][1])+p[i][0])r=!r}return r}
+
+/* ===================== USE CASE 1 : SOURCE LOCALIZATION ===================== */
+const LAM=0.01;
+let P={},N,K,M,Z=[],A=[],Y=[],S=[],cst,pr,bestPre,G,idm,edg,zcol=[],cmin,cmax,total=0n,sampled=false,cx=null,qr=null,qsub=[],selZ=[],tok1=0,qcur=null;
+let T1=2600,T2=3300,T3=3300,TZ=3500,TZD=2600,S3=7000,IPD=3000,SP,QD=3600,CDc=4500,E4,END,pz=0,T=0,playing=false,ready=false,flags={},cols,rows,cell,gx,gy;
+const zl=z=>z.length?z.map(q=>'Z'+(q+1)).join(' + '):'∅';
+const lbl=i=>zl(S[i]);
+const yhat=zs=>[0,1,2].map(j=>zs.reduce((s,z)=>s+A[z][j],0));
+const locCost=zs=>{const p=yhat(zs);return LAM*zs.length+[0,1,2].reduce((s,j)=>s+(Y[j]-p[j])**2,0)};
+const coords=zs=>zs.map(z=>`Z${z+1} (${Z[z][0].toFixed(1)}, ${Z[z][1].toFixed(1)})`).join(', ');
+
+function exactSearch(limitMs){const t0=performance.now();let cnt=0,best=Infinity,bz=null,to=false;const cur=[];
+ const rec=(st,d,s0,s1,s2)=>{for(let z=st;z<N&&!to;z++){const a=A[z],n0=s0+a[0],n1=s1+a[1],n2=s2+a[2];cur[d]=z;
+  const e=(Y[0]-n0)**2+(Y[1]-n1)**2+(Y[2]-n2)**2+LAM*(d+1);cnt++;if(e<best){best=e;bz=cur.slice(0,d+1)}
+  if((cnt&4095)==0&&performance.now()-t0>limitMs){to=true;return}
+  if(d+1<K)rec(z+1,d+1,n0,n1,n2)}};
+ rec(0,0,0,0,0);return{count:cnt,cost:best,zones:bz,ms:performance.now()-t0,timedOut:to}}
+
+function setup(){
+ let J;try{J=JSON.parse($('json').value)}catch(e){$('err').textContent='Invalid JSON: '+e.message;return false}
+ try{P.poly=J.farm_boundary;P.nodes=[J.node_1_coordinates,J.node_2_coordinates,J.node_3_coordinates];P.str=+J.sensor_response_strength;P.u=+J.wind_speed_mps;P.zs=+J.zone_size_m>0?+J.zone_size_m:2;
+  const a=J.wind_direction_deg*Math.PI/180;P.wx=Math.cos(a);P.wy=Math.sin(a);P.deg=J.wind_direction_deg;
+  if(!(P.poly.length>=3)||P.nodes.some(n=>!n||n.length<2)||!isFinite(P.str+P.u+a))throw Error('check boundary, node coordinates and numeric fields')}catch(e){$('err').textContent='Invalid input: '+e.message;return false}
+ $('err').textContent='';
+ K=clamp(Math.round($('ms').value)||2,1,4);$('ms').value=K;
+ const xs=P.poly.map(p=>p[0]),ys=P.poly.map(p=>p[1]),minx=Math.min(...xs),maxx=Math.max(...xs),miny=Math.min(...ys),maxy=Math.max(...ys),bw=maxx-minx||1,bh=maxy-miny||1;
+ P.sc=Math.min(844/bw,504/bh);P.ox=(900-bw*P.sc)/2-minx*P.sc;P.oy=(560-bh*P.sc)/2-miny*P.sc;P.k=Math.max(bw,bh)/100;
+ const R=rng(7);
+ if($('zm').value=='grid'){const zs=P.zs,ce=[];for(let y=miny+zs/2;y<maxy;y+=zs)for(let x=minx+zs/2;x<maxx;x+=zs)if(pip(x,y,P.poly))ce.push([x,y]);
+  if(ce.length<2){$('err').textContent='Farm is too small for '+zs+' m zones.';return false}
+  if(ce.length>100){$('err').textContent=`This farm gives ${ce.length} zones of ${zs} m (max 100). Reduce the farm or choose the clustered layout.`;return false}
+  Z=ce;N=ce.length}
+ else{N=clamp(Math.round($('nz').value)||8,2,100);const pts=[],st=Math.max(bw,bh)/70;
+  for(let x=minx;x<=maxx;x+=st)for(let y=miny;y<=maxy;y+=st)if(pip(x,y,P.poly))pts.push([x,y]);
+  let ce=[pts[Math.floor(R()*pts.length)]];
+  while(ce.length<N){let b=null,bd=-1;for(const p of pts){let d=1e9;for(const c of ce)d=Math.min(d,(p[0]-c[0])**2+(p[1]-c[1])**2);if(d>bd){bd=d;b=p}}ce.push(b)}
+  for(let it=0;it<12;it++){const s=ce.map(()=>[0,0,0]);for(const p of pts){let b=0,bd=1e9;ce.forEach((c,i)=>{const d=(p[0]-c[0])**2+(p[1]-c[1])**2;if(d<bd){bd=d;b=i}});s[b][0]+=p[0];s[b][1]+=p[1];s[b][2]++}ce=ce.map((c,i)=>s[i][2]?[s[i][0]/s[i][2],s[i][1]/s[i][2]]:c)}
+  ce.sort((a,b)=>a[0]+a[1]*.3-b[0]-b[1]*.3);Z=ce}
+ $('nz').value=Math.min(100,N);K=Math.min(K,N);
+ idm=new Uint8Array(225*140);edg=new Uint8Array(225*140);
+ for(let j=0;j<140;j++)for(let i=0;i<225;i++){const fx=(i*4+2-P.ox)/P.sc,fy=(j*4+2-P.oy)/P.sc;let id=255;if(pip(fx,fy,P.poly)){let bd=1e18;Z.forEach((c,q)=>{const d=(fx-c[0])**2+(fy-c[1])**2;if(d<bd){bd=d;id=q}})}idm[j*225+i]=id}
+ for(let j=0;j<139;j++)for(let i=0;i<224;i++){const k=j*225+i;if(idm[k]!=255&&(idm[k]!=idm[k+1]||idm[k]!=idm[k+225]))edg[k]=1}
+ zcol=Z.map((_,i)=>{const h=(i*47)%70+170,c=document.createElement('canvas').getContext('2d');c.fillStyle=`hsl(${h},80%,60%)`;c.fillRect(0,0,1,1);return c.getImageData(0,0,1,1).data});
+ // influence matrix A (N zones x 3 nodes): Gaussian plume along the wind direction
+ A=Z.map(z=>P.nodes.map(n=>{const dx=(n[0]-z[0])/P.k,dy=(n[1]-z[1])/P.k,al=dx*P.wx+dy*P.wy,cr=-dx*P.wy+dy*P.wx,sg=3.5+.24*Math.max(al,0);
+  const dec=al<0?Math.exp(al/2.5):Math.exp(-al/(16+5*P.u));return Math.min(.98,P.str*Math.exp(-cr*cr/(2*sg*sg))*dec)}));
+ // hidden ground truth -> observed sensor response (linear model Y = A X + noise, so the objective is a true QUBO)
+ const tt=A.map((a,i)=>[i,a[0]+a[1]+a[2]]).sort((a,b)=>b[1]-a[1]),pool=tt.slice(0,Math.max(Math.min(K,2)+2,Math.ceil(N/2))).map(x=>x[0]),tz=[];
+ while(tz.length<Math.min(K,2,pool.length)){const z=pool[Math.floor(R()*pool.length)];if(!tz.includes(z))tz.push(z)}
+ Y=[0,1,2].map(n=>Math.max(0,tz.reduce((s,z)=>s+A[z][n],0)+(R()-.5)*.03));
+ // display state space: all combinations of 1..K zones (capped for display); true best is always included
+ const CAP=6000;S=[];total=0n;sampled=false;
+ for(let k=1;k<=K;k++)total+=Cb(N,k);
+ for(let k=1;k<=K&&!sampled;k++){const cnt=Cb(N,k);
+  if(BigInt(S.length)+cnt<=BigInt(CAP)){const rec=(s,a)=>{if(a.length==k){S.push(a.slice());return}for(let z=s;z<N;z++){a.push(z);rec(z+1,a);a.pop()}};rec(0,[])}
+  else{sampled=true;const seen=new Set();let g=0;while(S.length<CAP&&g++<CAP*20){const a=new Set();while(a.size<k)a.add(Math.floor(R()*N));const s=[...a].sort((x,y)=>x-y),key=s.join();if(!seen.has(key)){seen.add(key);S.push(s)}}}}
+ cx=exactSearch(5000);
+ if(cx.zones&&!S.some(s=>s.join()==cx.zones.join()))S.push(cx.zones.slice());
+ M=S.length;cst=new Float32Array(M);pr=new Float32Array(M*3);
+ for(let i=0;i<M;i++){const c=S[i];let e=0;for(let n=0;n<3;n++){let p=0;for(let j=0;j<c.length;j++)p+=A[c[j]][n];pr[i*3+n]=p;e+=(Y[n]-p)**2}cst[i]=e+LAM*c.length}
+ cmin=1e9;cmax=-1e9;for(let i=0;i<M;i++){cmin=Math.min(cmin,cst[i]);cmax=Math.max(cmax,cst[i])}
+ bestPre=new Int32Array(M);let b=0;for(let i=0;i<M;i++){if(cst[i]<cst[b])b=i;bestPre[i]=b}
+ G=Array.from(cst,c=>Math.exp(-4*Math.sqrt((c-cmin)/(cmax-cmin+1e-9))));
+ // reduced QAOA subset: zones that individually fit Y best (classical pre-screen)
+ const nq=Math.min(N,clamp(Math.round($('qn').value)||10,4,12));$('qn').value=nq;
+ qsub=A.map((a,z)=>({z,e:[0,1,2].reduce((s,j)=>s+(Y[j]-a[j])**2,0)})).sort((a,b)=>a.e-b.e).slice(0,nq).map(o=>o.z).sort((a,b)=>a-b);
+ IPD=clamp(N*300,2500,6000);SP=S3+IPD;CDc=clamp(M*8,4000,12000);E4=SP+CDc+2000;END=E4+6500;
+ cols=Math.ceil(Math.sqrt(M*440/420));rows=Math.ceil(M/cols);cell=Math.min(440/cols,420/rows,44);gx=(440-cols*cell)/2;gy=(420-rows*cell)/2;
+ $('tot').textContent=total.toLocaleString()+(sampled?` (${M.toLocaleString()} shown in animation)`:'');
+ fillForm();return true}
+
+function fillForm(){const f=v=>v.toFixed(3);
+ $('fbox').innerHTML=`<b>Formulation.</b> Observed response <span class="mono">Y = [${Y.map(f).join(', ')}]</span> (one value per installed node). Predicted response <span class="mono">Ŷ = A·X</span>, with <span class="mono">A</span> the 3×${N} influence matrix and <span class="mono">X ∈ {0,1}<sup>${N}</sup></span> the source-selection vector (1…${K} sources).<br>
+ Objective: <span class="mono">min ‖Y − AX‖² + λΣxᵢ</span>, λ = ${LAM}. Expanded as a QUBO <span class="mono">C(x) = xᵀQx + cᵀx + ‖Y‖²</span> with <span class="mono">Qᵢₖ = 2Σⱼ AⱼᵢAⱼₖ</span>, <span class="mono">cᵢ = Σⱼ(Aⱼᵢ² − 2AⱼᵢYⱼ) + λ</span>, then mapped to an Ising Hamiltonian <span class="mono">Σhᵢzᵢ + ΣJᵢₖzᵢzₖ</span> (xᵢ = (1−zᵢ)/2) for QAOA.<br>
+ <b>Executable QAOA subset:</b> ${qsub.length} of ${N} zones → ${qsub.length} qubits (${(2**qsub.length).toLocaleString()} basis states): <span class="mono">${qsub.map(z=>'Z'+(z+1)).join(', ')}</span>. Zones are pre-screened classically by single-zone fit to Y; a full ${N}-qubit circuit is not simulated. Marked ★ in the matrix.`}
+
+async function runQ1(tk){
+ const n=qsub.length,p=clamp(Math.round($('qp').value)||2,1,3);$('qp').value=p;
+ const q=Core.buildLocQUBO(A,Y,LAM,qsub),diag=Core.isingDiag(Core.isingFromQubo(q));
+ const res=await Core.qaoa(diag,n,p,{seed:21,yieldFn:tick});
+ if(tk!==tok1)return;
+ const NS=1<<n,zonesOf=m=>qsub.filter((_,i)=>m>>i&1);
+ let chk=0,feasMass=0,so=null;const feas=new Uint8Array(NS);
+ for(let m=0;m<NS;m++){const zs=zonesOf(m);chk=Math.max(chk,Math.abs(diag[m]-locCost(zs)));const k=zs.length;if(k>=1&&k<=K){feas[m]=1;feasMass+=res.final[m];if(!so||diag[m]<diag[so])so=m}}
+ const shots=4096,cnt=Core.sampleShots(res.final,shots,5);let best=null;
+ for(const[m,c]of cnt){if(!feas[m])continue;const cost=locCost(zonesOf(m));if(!best||cost<best.cost-1e-12||(Math.abs(cost-best.cost)<1e-12&&c>best.shots))best={m,zones:zonesOf(m),cost,shots:c,prob:res.final[m],fromShots:true}}
+ if(!best){const m=Core.topK(res.final.map((v,i)=>feas[i]?v:0),1)[0];best={m,zones:zonesOf(m),cost:locCost(zonesOf(m)),shots:0,prob:res.final[m],fromShots:false}}
+ qr={n,p,snaps:res.snaps,final:res.final,res,best,sidx:best.m,top:Core.topK(res.final.map((v,i)=>feas[i]?v:0),6),feas,chk,feasMass,so,shots,simMs:res.simMs,diag};
+ qr.pmaxF=res.final[qr.top[0]];selZ=best.zones;qcur=new Float64Array(NS);fillRes()}
+
+function fillRes(){const zs=selZ,yc=yhat(cx.zones),yq=yhat(zs),qb=qr.best,xs=z=>{const b=Array(N).fill(0);z.forEach(i=>b[i]=1);return N<=48?b.join(''):'1 at '+z.map(i=>'Z'+(i+1)).join(', ')+' (N='+N+')'};
+ const rate=cx.count/cx.ms,est=Number(total)/rate,same=cx.zones.join()==zs.join();
+ $('rc').innerHTML=`<div style="color:var(--cl);font-weight:800;letter-spacing:.08em">CLASSICAL</div><div class="sub">Measured exhaustive-search runtime (JavaScript, this browser)</div><div class="t" style="color:var(--cl)">${fmtDur(cx.ms)}</div>
+ <div class="kv">Status<b>${cx.timedOut?'Timed out':'Completed'}</b></div><div class="kv">Search space (1…${K} sources)<b>${total.toLocaleString()}</b></div><div class="kv">Configurations evaluated<b>${cx.count.toLocaleString()}</b></div>
+ ${cx.timedOut?`<div class="kv">Estimated full search (extrapolated)<b>${fmtDur(est)}</b></div>`:''}
+ <div class="kv">Best classical solution<b>${zl(cx.zones)}</b></div><div class="kv">Best classical cost<b>${cx.cost.toFixed(5)}</b></div><div class="kv">Local farm coordinates<b style="font-size:11px">${coords(cx.zones)}</b></div>`;
+ $('rq').innerHTML=`<div style="color:var(--qu);font-weight:800;letter-spacing:.08em">QUANTUM · QAOA</div><div class="sub">Measured statevector-simulation time (classical simulator, ${qr.n} qubits, p = ${qr.p})</div><div class="t" style="color:var(--qu)">${fmtDur(qr.simMs)}</div>
+ <div class="kv">Qubits / zones<b>${qr.n} of ${N}</b></div><div class="kv">Objective evaluations (γ,β search)<b>${qr.res.evals.toLocaleString()}</b></div>
+ <div class="kv">Best QAOA solution (best feasible of ${qr.shots.toLocaleString()} shots)<b>${zl(zs)}</b></div><div class="kv">Bitstring probability · shots<b>${(qb.prob*100).toFixed(2)}% · ${qb.shots}</b></div>
+ <div class="kv">Best QAOA cost<b>${qb.cost.toFixed(5)}</b></div><div class="kv">Probability mass on feasible states<b>${(qr.feasMass*100).toFixed(1)}%</b></div>
+ <div class="kv">Local farm coordinates<b style="font-size:11px">${coords(zs)}</b></div>`;
+ const row=(j)=>`<tr><td>Node ${j+1}</td><td>${Y[j].toFixed(3)}</td><td style="color:var(--qu)">${yq[j].toFixed(3)}</td><td style="color:var(--cl)">${yc[j].toFixed(3)}</td></tr>`;
+ $('obs').innerHTML=`<b>Observed vs predicted responses</b><table class="st mono"><tr><th></th><th>Observed Y</th><th>Ŷ = AX (QAOA)</th><th>Ŷ = AX (classical)</th></tr>${[0,1,2].map(row).join('')}</table>
+ <div class="kv">X (QAOA) over ${N} zones<b style="font-size:11px">${xs(zs)}</b></div><div class="kv">Objective ‖Y−AX‖² + λΣx: QAOA vs classical<b>${qb.cost.toFixed(5)} vs ${cx.cost.toFixed(5)}</b></div>
+ <div class="kv">QAOA result vs classical optimum<b>${same?'identical solution':'different — QAOA searched only the '+qr.n+'-zone subset; Δcost = '+(qb.cost-cx.cost).toExponential(2)}</b></div>
+ <div class="kv">Best feasible state inside the subset (exact)<b>${zl(qsub.filter((_,i)=>qr.so>>i&1))} · ${qr.diag[qr.so].toFixed(5)}</b></div>
+ <div class="kv">Check: QUBO/Ising energy vs direct objective, all ${(1<<qr.n).toLocaleString()} bitstrings<b>max |Δ| = ${qr.chk.toExponential(1)}</b></div>`}
+
+const X=x=>P.ox+x*P.sc,Yy=y=>P.oy+y*P.sc;
+function poly(c,p){c.beginPath();p.forEach((q,i)=>i?c.lineTo(q[0],q[1]):c.moveTo(q[0],q[1]));c.closePath()}
+function plume(c,zi,rev,al){const z=Z[zi],sx=X(z[0]),sy=Yy(z[1]),L=62*P.k*P.sc;c.save();c.globalCompositeOperation='lighter';
+ for(let i=0;i<=26;i++){const f=i/26;if(f>rev)break;const D=f*L,r=(6+.2*D)*1.05,a=al*.2*Math.exp(-f*2),g=c.createRadialGradient(sx+P.wx*D,sy+P.wy*D,0,sx+P.wx*D,sy+P.wy*D,r);
+  g.addColorStop(0,`rgba(255,120,60,${a})`);g.addColorStop(1,'rgba(255,60,60,0)');c.fillStyle=g;c.beginPath();c.arc(sx+P.wx*D,sy+P.wy*D,r,0,7);c.fill()}c.restore()}
+const zfont=()=>N>120?9:N>60?11:13;
+
+function farm(t,dt,ts){
+ const c=fc;c.clearRect(0,0,900,560);c.strokeStyle='rgba(120,180,255,.05)';c.beginPath();for(let x=0;x<=900;x+=45){c.moveTo(x,0);c.lineTo(x,560)}for(let y=0;y<=560;y+=45){c.moveTo(0,y);c.lineTo(900,y)}c.stroke();
+ const pp=P.poly.map(p=>[X(p[0]),Yy(p[1])]),n=pp.length,m=t<T1?t/T1*n:n,path=[];
+ for(let i=0;i<Math.min(Math.floor(m),n);i++)path.push(pp[i]);
+ if(m<n&&m>=1){const i=Math.floor(m),f=m-i,a=pp[i-1],b=pp[i];path.push([a[0]+(b[0]-a[0])*f,a[1]+(b[1]-a[1])*f])}
+ const cfr=clamp((t-T1)/(T2-T1));if(t>=T1){const a=pp[n-1],b=pp[0];path.push([a[0]+(b[0]-a[0])*cfr,a[1]+(b[1]-a[1])*cfr])}
+ if(cfr>=1){poly(c,pp);c.fillStyle=`rgba(59,224,196,${.07*clamp((t-T2)/600)})`;c.fill()}
+ const res=t>=E4&&qr,pulse=.5+.5*Math.sin(ts/260);
+ const za=Z.map((_,i)=>{const rv=clamp((t-TZ-i*TZD/N)/450);let a=rv*.1;if(res)a=selZ.includes(i)?rv*(.55+.2*pulse):rv*.04;return[a,rv]});
+ if(t>=TZ){const d=img.data;for(let k=0;k<225*140;k++){const id=idm[k];if(id==255){d[k*4+3]=0;continue}const zc=zcol[id],a=za[id][0],rv=za[id][1],on=res&&selZ.includes(id);
+  if(edg[k]){d[k*4]=120;d[k*4+1]=230;d[k*4+2]=255;d[k*4+3]=rv*(res&&!on?60:130)}else{d[k*4]=on?255:zc[0];d[k*4+1]=on?170:zc[1];d[k*4+2]=on?70:zc[2];d[k*4+3]=a*255}}
+  zx.putImageData(img,0,0);c.drawImage(zcv,0,0,900,560)}
+ if(path.length>1){c.save();c.shadowColor='#3be0c4';c.shadowBlur=14;c.strokeStyle='#3be0c4';c.lineWidth=2.4;c.beginPath();path.forEach((q,i)=>i?c.lineTo(q[0],q[1]):c.moveTo(q[0],q[1]));c.stroke();c.restore()}
+ if(t<T2){for(let i=0;i<Math.min(Math.floor(m),n);i++){c.fillStyle='#fff';c.shadowColor='#3be0c4';c.shadowBlur=10;c.beginPath();c.arc(pp[i][0],pp[i][1],4,0,7);c.fill();c.shadowBlur=0}}
+ if(t>=TZ){c.textAlign='center';c.textBaseline='middle';c.font=`700 ${zfont()}px Manrope`;Z.forEach((z,i)=>{const rv=za[i][1];if(rv<.4)return;const on=res&&selZ.includes(i);c.fillStyle=on?'#fff':`rgba(190,235,255,${.7*rv})`;c.fillText('Z'+(i+1),X(z[0]),Yy(z[1]))})}
+ if(t>=TZ+TZD){c.fillStyle='rgba(160,215,235,.7)';c.font='600 12px JetBrains Mono';c.textAlign='left';c.textBaseline='alphabetic';c.fillText(`wind ${P.u} m/s · ${P.deg}° · zones ${N}`,24,548)}
+ if(res){const al=clamp((t-E4)/1200);selZ.forEach(zi=>{plume(c,zi,1,al*.5);const z=Z[zi];c.save();c.shadowColor='#ffb454';c.shadowBlur=26;c.strokeStyle='#ffd9a0';c.lineWidth=2.5;c.beginPath();c.arc(X(z[0]),Yy(z[1]),14+5*pulse,0,7);c.stroke();c.restore()});
+  c.fillStyle=`rgba(255,235,200,${al})`;c.textAlign='left';c.textBaseline='alphabetic';c.font='600 12px Manrope';c.fillText('MOST PROBABLE SOURCE · QAOA best feasible result',24,28);c.font='800 28px Manrope';c.fillText(zl(selZ),24,58);
+  c.font='600 12px JetBrains Mono';c.fillStyle=`rgba(190,235,255,${al})`;selZ.forEach((z,q)=>c.fillText(`Z${z+1} @ (${Z[z][0].toFixed(1)}, ${Z[z][1].toFixed(1)})`,24,80+q*17));c.fillText(`cost ${qr.best.cost.toFixed(4)} · bitstring probability ${(qr.best.prob*100).toFixed(2)}%`,24,84+selZ.length*17)}
+ if(t>=T3){P.nodes.forEach((nd,i)=>{const k=sm(clamp((t-T3-i*250)/500)),x=X(nd[0]),y=Yy(nd[1]);
+  c.save();c.shadowColor='#7cf0ff';c.shadowBlur=16;c.fillStyle='#bff7ff';c.beginPath();c.arc(x,y,6*k,0,7);c.fill();c.strokeStyle='#7cf0ff';c.lineWidth=1.5;c.beginPath();c.arc(x,y,12*k,0,7);c.stroke();c.restore();
+  c.fillStyle=`rgba(190,245,255,${k})`;c.font='600 12px Manrope';c.textAlign='left';c.textBaseline='alphabetic';c.fillText(`Node ${i+1} · Y=${Y[i].toFixed(2)}`,x+16,y-12)})}}
+
+const cs=[...document.querySelectorAll('#cch span')],qs=[...document.querySelectorAll('#qch span')];
+const chip=(a,k)=>a.forEach((x,i)=>x.classList.toggle('a',i==k));
+function ffr(c,hl,col){const d=img.data;
+ for(let k=0;k<31500;k++){const id=idm[k];if(id==255){d[k*4+3]=0;continue}const a=hl[id],on=a>.02;
+  if(edg[k]){d[k*4]=130;d[k*4+1]=235;d[k*4+2]=255;d[k*4+3]=90}else{d[k*4]=on?col[0]:zcol[id][0];d[k*4+1]=on?col[1]:zcol[id][1];d[k*4+2]=on?col[2]:zcol[id][2];d[k*4+3]=Math.max(.1,a*.9)*255}}
+ zx.putImageData(img,0,0);c.clearRect(0,0,900,560);c.drawImage(zcv,0,0,900,560);
+ c.save();c.shadowColor='#3be0c4';c.shadowBlur=12;c.strokeStyle='#3be0c4';c.lineWidth=2.2;poly(c,P.poly.map(p=>[X(p[0]),Yy(p[1])]));c.stroke();c.restore();
+ c.textAlign='center';c.textBaseline='middle';c.font=`700 ${zfont()}px Manrope`;
+ Z.forEach((z,i)=>{c.fillStyle=hl[i]>.5?'#fff':'rgba(200,238,255,.75)';c.fillText('Z'+(i+1),X(z[0]),Yy(z[1]))})}
+function nodesF(c,txt,col){P.nodes.forEach((n,i)=>{const x=X(n[0]),y=Yy(n[1]);c.save();c.shadowColor='#7cf0ff';c.shadowBlur=14;c.fillStyle='#bff7ff';c.beginPath();c.arc(x,y,6,0,7);c.fill();c.strokeStyle='#7cf0ff';c.lineWidth=1.5;c.beginPath();c.arc(x,y,12,0,7);c.stroke();c.restore();
+ c.textAlign='left';c.textBaseline='alphabetic';c.font='600 13px Manrope';c.fillStyle='#d6f8ff';c.fillText('Node '+(i+1)+' · Y='+Y[i].toFixed(2),x+16,y-14);if(txt){c.font='700 13px JetBrains Mono';c.fillStyle=col;c.fillText('Ŷ='+txt[i],x+16,y+4)}})}
+function prepFarm(c,col){const zi=pz,z=Z[zi],x=X(z[0]),y=Yy(z[1]),hl=new Float32Array(N);hl[zi]=1;ffr(c,hl,col);
+ P.nodes.forEach((n,j)=>{c.strokeStyle=`rgba(${col[0]},${col[1]},${col[2]},${.3+.7*A[zi][j]})`;c.lineWidth=1+3*A[zi][j];c.setLineDash([7,5]);c.beginPath();c.moveTo(x,y);c.lineTo(X(n[0]),Yy(n[1]));c.stroke();c.setLineDash([])});
+ c.save();c.shadowColor='#fff';c.shadowBlur=18;c.strokeStyle='#fff';c.lineWidth=2.5;c.beginPath();c.arc(x,y,15,0,7);c.stroke();c.restore()}
+function prepTxt(){return `<div style="color:var(--mu);font-size:11px;letter-spacing:.08em">INFLUENCE · ZONE → ALL 3 NODES</div><div class="big">Z${pz+1}</div><table class="st mono"><tr><th></th><th>Influence</th></tr>${[0,1,2].map(j=>`<tr><td>Node ${j+1}</td><td style="color:#fff">${A[pz][j].toFixed(2)}</td></tr>`).join('')}</table><div style="color:var(--mu);font-size:11px">Zones combine linearly: Ŷ = A·X (a column of A per selected zone)</div>`}
+function mxFill(cur,n){let h='<table class="mxt"><tr><th></th>';for(let i=0;i<n;i++)h+=`<th class="${i==cur?'cur':''}">Z${i+1}${qsub.includes(i)?'★':''}</th>`;h+='</tr>';
+ for(let j=0;j<3;j++){h+=`<tr><th>Node ${j+1}</th>`;for(let i=0;i<n;i++)h+=`<td class="${i==cur?'cur':''}">${A[i][j].toFixed(2)}</td>`;h+='</tr>'}
+ $('mxg').innerHTML=h+'</table>';if(cur>=0)$('mxg').scrollLeft=1e6}
+
+// generic probability state-space view: one dot per basis state (colour/size = probability relative to the current maximum)
+function dots(c,W,H,probs,feas,selIdx,ts){const NS=probs.length,cl=Math.ceil(Math.sqrt(NS*W/H)),rw=Math.ceil(NS/cl),ce=Math.min(W/cl,H/rw),ox=(W-cl*ce)/2,oy=(H-rw*ce)/2;let pm=0;for(let i=0;i<NS;i++)if(probs[i]>pm)pm=probs[i];
+ c.clearRect(0,0,W,H);const glow=NS<=512,xy=i=>[ox+(i%cl+.5)*ce,oy+(Math.floor(i/cl)+.5)*ce];
+ for(let i=0;i<NS;i++){const u=probs[i]/pm,b=Math.pow(u,.5),h=feas[i]?270-85*b:290,[x,y]=xy(i),a=(feas[i]?.35+.65*b:.15+.3*b),r=ce*(.14+.34*b);
+  if(glow&&b>.6){c.save();c.shadowColor=`hsl(${h},100%,72%)`;c.shadowBlur=18*b;c.fillStyle=`hsla(${h},100%,${66+26*b}%,${a})`;c.beginPath();c.arc(x,y,r,0,7);c.fill();c.restore()}
+  else if(ce<5){c.fillStyle=`hsla(${h},100%,${55+30*b}%,${a})`;c.fillRect(x-r,y-r,2*r,2*r)}
+  else{c.fillStyle=`hsla(${h},100%,${60+30*b}%,${a})`;c.beginPath();c.arc(x,y,r,0,7);c.fill()}}
+ if(selIdx>=0){const[x,y]=xy(selIdx);c.save();c.shadowColor='#7cf0ff';c.shadowBlur=26;c.strokeStyle='#fff';c.lineWidth=2.4;c.beginPath();c.arc(x,y,Math.max(7,ce*.7)+1.5*Math.sin(ts/250),0,7);c.stroke();c.restore()}}
+
+function grid(c,mode,t,dt,ts){pz=Math.min(N-1,Math.floor(clamp((t-S3)/IPD)*N));
+ c.clearRect(0,0,440,420);const started=t>=SP&&(mode=='c'||qr),prog=clamp((t-SP)/(mode=='c'?CDc:QD)),xy=i=>[gx+(i%cols+.5)*cell,gy+(Math.floor(i/cols)+.5)*cell],lx=x=>Math.min(380,Math.max(50,x));
+ if(mode=='c'){const cur=!started?-1:Math.min(M-1,Math.floor(M*Math.pow(prog,M>300?2.2:1))),bi=cur>=0?bestPre[cur]:-1,done=prog>=1,show=done?bi:cur;
+  for(let i=0;i<M;i++){const[x,y]=xy(i);if(i>cur){c.fillStyle='rgba(150,170,200,.14)';c.beginPath();c.arc(x,y,cell*.16,0,7);c.fill()}
+   else if(i<cur||done){c.fillStyle=`rgba(255,180,84,${.1+.22*G[i]})`;c.beginPath();c.arc(x,y,cell*.27,0,7);c.fill()}}
+  if(cur>=0&&!done){const[x,y]=xy(cur);c.save();c.shadowColor='#ffb454';c.shadowBlur=22;c.fillStyle='#fff3d6';c.beginPath();c.arc(x,y,cell*.36,0,7);c.fill();c.restore()}
+  if(bi>=0){const[x,y]=xy(bi);c.save();c.shadowColor='#ffb454';c.shadowBlur=done?30:12;c.strokeStyle=done?'#fff3d6':'#ffb454';c.lineWidth=2;c.beginPath();c.arc(x,y,cell*(done?.42:.34),0,7);c.stroke();c.restore();if(done){c.fillStyle='#ffe3b0';c.font='700 12px Manrope';c.textAlign='center';c.fillText(lbl(bi),lx(x),Math.max(14,y-cell*.55))}}
+  const hl=new Float32Array(N);if(cur>=0){if(bi!=cur&&!done)S[bi].forEach(zz=>hl[zz]=.3);S[show].forEach(zz=>hl[zz]=1)}
+  if(!started)prepFarm(cf,[255,180,84]);else ffr(cf,hl,[255,180,84]);
+  if(cur>=0)S[show].forEach(zi=>{plume(cf,zi,1,.6);cf.save();cf.shadowColor='#ffb454';cf.shadowBlur=18;cf.strokeStyle='#fff3d6';cf.lineWidth=2.5;cf.beginPath();cf.arc(X(Z[zi][0]),Yy(Z[zi][1]),15,0,7);cf.stroke();cf.restore();
+   P.nodes.forEach((n,j)=>{cf.strokeStyle=`rgba(255,190,100,${.25+.7*A[zi][j]})`;cf.lineWidth=1+3*A[zi][j];cf.setLineDash([7,5]);cf.beginPath();cf.moveTo(X(Z[zi][0]),Yy(Z[zi][1]));cf.lineTo(X(n[0]),Yy(n[1]));cf.stroke();cf.setLineDash([])})});
+  nodesF(cf,cur>=0?[0,1,2].map(j=>pr[show*3+j].toFixed(2)):!started?[0,1,2].map(j=>A[pz][j].toFixed(2)):null,'#ffc46b');
+  chip(cs,!started?-1:done?4:Math.floor(ts/300)%4);
+  const tbl=ii=>`<table class="st mono"><tr><th></th><th>Predicted Ŷ</th><th>Observed Y</th></tr>${[0,1,2].map(j=>`<tr><td>Node ${j+1}</td><td style="color:var(--cl)">${pr[ii*3+j].toFixed(3)}</td><td>${Y[j].toFixed(3)}</td></tr>`).join('')}</table>`,cfg=ii=>`[${S[ii].map(z=>'Z'+(z+1)).join(', ')}]`;
+  let h='';
+  if(!started)h=prepTxt();
+  else if(done)h=`<div style="color:var(--cl);font-weight:800">CLASSICAL BEST SOLUTION</div><div class="big win" style="color:var(--cl)">${lbl(bi)}</div><div class="mono" style="color:var(--mu);font-size:11px">${cfg(bi)}</div>${tbl(bi)}<div>Objective <b class="mono">${cst[bi].toFixed(5)}</b> · lowest of ${cx.count.toLocaleString()} configurations ${cx.timedOut?'evaluated (timed out)':'(exhaustive)'}</div><div class="mono" style="color:var(--cl);font-size:12px">Measured search time ${fmtDur(cx.ms)}</div>`;
+  else{let L='';for(let j=Math.max(0,cur-3);j<=Math.min(M-1,cur+3);j++)L+=`<div class="${j<cur?'d':j==cur?'c':'p'}"><b class="mono">${lbl(j)}</b><span>${j<cur?'✓ evaluated':j==cur?'CURRENT':'pending'}</span></div>`;
+   h=`<div style="color:var(--mu);font-size:11px;letter-spacing:.08em">CURRENT CLASSICAL STATE · ${S[cur].length}-SOURCE · ${(cur+1).toLocaleString()} / ${M.toLocaleString()}</div><div class="big">${lbl(cur)}</div><div class="mono" style="color:var(--mu);font-size:11px">${cfg(cur)}</div>${tbl(cur)}<div>Objective <b class="mono" style="color:var(--cl)">${cst[cur].toFixed(5)}</b> · best so far <b class="mono">${cst[bi].toFixed(5)}</b> (${lbl(bi)})</div><div class="lst">${L}</div>`}
+  if(flags.cr!==h){flags.cr=h;$('cro').innerHTML=h}return}
+ // ---- quantum: real QAOA probabilities (statevector after each layer, with optimised γ,β) ----
+ const NSq=1<<(qr?qr.n:1);
+ if(!started){if(!qr||t<SP){prepFarm(qf,[150,205,255]);nodesF(qf,[0,1,2].map(j=>A[pz][j].toFixed(2)),'#9ff3ff');chip(qs,-1);const h=prepTxt();if(flags.qr!==h){flags.qr=h;$('qro').innerHTML=h}}return}
+ const meas=t>=SP+QD,f=clamp(prog/.85)*qr.p,a=Math.min(qr.p,Math.floor(f)),b=Math.min(qr.p,a+1),fr=a>=qr.p?0:sm(f-a),S0=qr.snaps[a],S1=qr.snaps[b],cur=qcur;
+ for(let i=0;i<NSq;i++)cur[i]=S0[i]*(1-fr)+S1[i]*fr;
+ const mg=new Float64Array(N);for(let i=0;i<NSq;i++){const v=cur[i];for(let q=0;q<qr.n;q++)if(i>>q&1)mg[qsub[q]]+=v}
+ dots(c,440,420,cur,qr.feas,meas?qr.sidx:-1,ts);
+ const hl=new Float32Array(N);for(let q=0;q<N;q++)hl[q]=Math.pow(clamp(mg[q]),.7);ffr(qf,hl,[150,205,255]);
+ qf.save();qf.globalCompositeOperation='lighter';for(let q=0;q<N;q++)if(mg[q]>.04){const x=X(Z[q][0]),y=Yy(Z[q][1]),r=26+70*Math.sqrt(mg[q]),g=qf.createRadialGradient(x,y,0,x,y,r);g.addColorStop(0,`rgba(150,235,255,${.8*Math.pow(clamp(mg[q]),.8)})`);g.addColorStop(1,'rgba(150,100,255,0)');qf.fillStyle=g;qf.beginPath();qf.arc(x,y,r,0,7);qf.fill()}qf.restore();
+ if(meas)selZ.forEach(zi=>{qf.save();qf.shadowColor='#7cf0ff';qf.shadowBlur=26;qf.strokeStyle='#fff';qf.lineWidth=3;qf.beginPath();qf.arc(X(Z[zi][0]),Yy(Z[zi][1]),16+3*Math.sin(ts/250),0,7);qf.stroke();qf.restore()});
+ nodesF(qf,meas?yhat(selZ).map(v=>v.toFixed(2)):null,'#9ff3ff');
+ chip(qs,meas?4:prog>=.85?3:a==0&&fr<.1?0:(Math.floor(f*2)%2)+1);
+ const ph=meas?'MEASUREMENT · '+qr.shots.toLocaleString()+' shots':prog>=.85?'OPTIMISED (γ*, β*) · final distribution':a==0&&fr<.05?'INITIAL |+⟩ · uniform superposition':`STATE AFTER LAYER ${Math.min(qr.p,Math.ceil(f))} of ${qr.p} (cost γ, mixer β)`;
+ const stage=qr.p>0?Math.min(1,Math.ceil(f)/qr.p):0;
+ let h=`<div style="color:#7cf0ff;font-weight:800;font-size:12px">${ph}</div><div style="color:#b9c6ff;font-size:12px;margin:3px 0 8px">QAOA subset: <b class="mono" style="color:#fff">${qr.n}</b> qubits (of ${N} zones) · <b class="mono" style="color:#fff">${NSq.toLocaleString()}</b> basis states · simulated ${fmtDur(qr.simMs)}</div>`+
+ qr.top.map(i=>`<div class="pb${meas&&i==qr.sidx?' win':''}"><span class="mono">${zl(qsub.filter((_,k)=>i>>k&1))}</span><span class="tr"><i style="width:${Math.max(1,cur[i]/qr.pmaxF*100)}%"></i></span><b class="mono">${(cur[i]*100).toFixed(2)}%</b></div>`).join('')+
+ `<div style="color:var(--mu);font-size:11px;margin-top:4px">Top-6 feasible states (1…K sources) by final probability · uniform start each: ${(100/NSq).toFixed(3)}%</div>`+
+ (meas?`<div style="margin-top:10px"><b style="color:#7cf0ff">QAOA BEST FEASIBLE SOLUTION</b><div class="big win" style="color:#bfefff">${zl(selZ)}</div>Bitstring probability <b class="mono">${(qr.best.prob*100).toFixed(2)}%</b> · Cost <b class="mono">${qr.best.cost.toFixed(5)}</b></div>`:'');
+ if(flags.qr!==h){flags.qr=h;$('qro').innerHTML=h}}
+
+const PH=['Drawing farm boundary','Generating source zones','Complete farm grid','Most probable source','Final comparison'];
+function render(t,dt,ts){
+ farm(t,dt,ts);
+ const pv=t<T2?0:t<TZ+TZD+450?1:t<E4?2:t<E4+3500?3:4;$('phase').textContent=(!qr&&t>=SP-1)?'Running QAOA…':PH[pv];
+ const cm=$('cmp'),rs=$('res'),on=t>=S3,on2=t>=E4+3500&&qr;
+ cm.classList.toggle('on',on);rs.classList.toggle('on',!!on2);
+ if(on&&!flags.s1&&playing){flags.s1=1;cm.scrollIntoView({behavior:'smooth',block:'start'})}
+ if(t>=E4&&!flags.s2&&playing){flags.s2=1;$('stage').scrollIntoView({behavior:'smooth',block:'start'})}
+ if(on2&&!flags.s3&&playing){flags.s3=1;rs.scrollIntoView({behavior:'smooth',block:'end'})}
+ if(on){grid(cc,'c',t,dt,ts);grid(qc,'q',t,dt,ts);const n=t<SP?pz+1:N,k=t<SP?pz:-1;if(flags.mc!==n){flags.mc=n;mxFill(k,n)}}}
+function restart(){T=0;flags={};playing=true;$('cmp').classList.remove('on');$('res').classList.remove('on')}
+$('run1').onclick=()=>{if(!setup())return;qr=null;selZ=[];const tk=++tok1;ready=true;$('stage').classList.add('on');restart();$('stage').scrollIntoView({behavior:'smooth',block:'start'});runQ1(tk).catch(e=>{$('err').textContent='QAOA error: '+e.message})};
+
+/* ===================== USE CASE 2 : QUANTUM SENSOR PLACEMENT ===================== */
+let U2=null,runId2=0;const U2cv={f:$('f2'),c:$('cf2'),q:$('qf2')};
+const ACRE=4046.856,idl=ids=>ids.map(i=>'P'+(i+1)).join(' · '),idc=ids=>ids.map(i=>`P${i+1} (${U2.pts[i].x.toFixed(1)}, ${U2.pts[i].y.toFixed(1)})`).join(', ');
+const f2n=v=>v.toLocaleString('en-US'),setPhase2=t=>{$('u2phase').textContent=t};
+function updArea(){const w=+$('u2w').value,h=+$('u2h').value;$('u2a').value=(w*h).toFixed(1)+' m² ('+(w*h/ACRE).toFixed(3)+' acre)'}
+['u2w','u2h'].forEach(i=>$(i).addEventListener('input',updArea));updArea();
+
+function sizeCanvas(cv,cw,cfg,maxH){const{W,H}=cfg,m=Math.round(cw*.05);let sc=(cw-2*m)/W,ch=H*sc+2*m;if(ch>maxH){sc=(maxH-2*m)/H;cw=Math.round(W*sc+2*m);ch=maxH}cv.width=cw;cv.height=Math.round(ch);cv.m=m;cv.sc=sc}
+function readCfg(){const g=id=>+$(id).value,cfg={W:g('u2w'),H:g('u2h'),s:g('u2s'),dmin:g('u2d'),to:g('u2to')*1000,S:Math.round(g('u2sc')),nq:Math.round(g('u2q')),p:Math.round(g('u2p'))};
+ if(!(cfg.W>=8&&cfg.H>=8))return 'Farm width and height must be at least 8 m.';
+ if(!(cfg.s>=1&&cfg.s<=Math.min(cfg.W,cfg.H)))return 'Candidate spacing must be between 1 m and the shorter farm side.';
+ if(!(cfg.dmin>=0))return 'Minimum separation must be ≥ 0 m.';
+ if(!(cfg.to>=10))return 'Classical timeout must be at least 0.01 s.';
+ if(!(cfg.S>=2&&cfg.S<=16))return 'Scenarios must be between 2 and 16.';
+ if(!(cfg.nq>=6&&cfg.nq<=14))return 'QAOA qubits must be between 6 and 14.';
+ if(!(cfg.p>=1&&cfg.p<=3))return 'QAOA layers must be between 1 and 3.';return cfg}
+
+function drawFarm2(cv,o,ts){
+ const c=cv.getContext('2d'),{W,H,s}=U2.cfg,pts=U2.pts,cw=cv.width,ch=cv.height,m=cv.m,sc=cv.sc,px=x=>m+x*sc,py=y=>ch-m-y*sc;c.clearRect(0,0,cw,ch);
+ const cor=[[0,0],[W,0],[W,H],[0,H],[0,0]].map(p=>[px(p[0]),py(p[1])]),sg=[];let tot=0;for(let i=0;i<4;i++){const l=Math.hypot(cor[i+1][0]-cor[i][0],cor[i+1][1]-cor[i][1]);sg.push(l);tot+=l}
+ let rem=o.bt*tot;c.save();c.strokeStyle='#3be0c4';c.lineWidth=2.4;c.shadowColor='#3be0c4';c.shadowBlur=12;c.beginPath();c.moveTo(cor[0][0],cor[0][1]);
+ for(let i=0;i<4&&rem>0;i++){const f=Math.min(1,rem/sg[i]);c.lineTo(cor[i][0]+(cor[i+1][0]-cor[i][0])*f,cor[i][1]+(cor[i+1][1]-cor[i][1])*f);rem-=sg[i]}c.stroke();c.restore();
+ const fs=Math.max(10,Math.round(cw/80));
+ if(o.bt>=1){c.fillStyle='rgba(59,224,196,.05)';c.fillRect(px(0),py(H),W*sc,H*sc);c.fillStyle='rgba(190,235,255,.85)';c.font=`600 ${fs}px JetBrains Mono`;c.textAlign='center';c.textBaseline='middle';
+  c.fillText(`${W} m`,px(W/2),m*.45);c.save();c.translate(m*.4,py(H/2));c.rotate(-Math.PI/2);c.fillText(`${H} m`,0,0);c.restore();
+  const Lb=W>150?50:W>60?20:10,x0=px(W)-Lb*sc;c.strokeStyle='#cfe9ff';c.lineWidth=2;c.beginPath();c.moveTo(x0,ch-m*.45);c.lineTo(x0+Lb*sc,ch-m*.45);c.moveTo(x0,ch-m*.45-4);c.lineTo(x0,ch-m*.45+4);c.moveTo(x0+Lb*sc,ch-m*.45-4);c.lineTo(x0+Lb*sc,ch-m*.45+4);c.stroke();
+  c.textAlign='right';c.fillText(`scale ${Lb} m`,x0-8,ch-m*.45);c.textAlign='left';c.fillStyle='rgba(160,215,235,.8)';c.fillText(`grid spacing ${s} m`,px(0),ch-m*.45)}
+ const N=pts.length,nShow=Math.floor(clamp(o.pt)*N),spx=s*sc,showLab=o.labels&&spx>=26,r=clamp(spx*.1,1.8,4.5),lf=clamp(spx*.2,7,10);
+ c.textBaseline='alphabetic';
+ for(let i=0;i<nShow;i++){const p=pts[i],x=px(p.x),y=py(p.y),inSub=o.subset&&o.subset.has(i);
+  c.fillStyle=inSub?'#19e6ff':'rgba(111,168,200,.85)';c.beginPath();c.arc(x,y,inSub?r*1.7:r,0,7);c.fill();if(inSub){c.strokeStyle='#fff';c.lineWidth=1;c.stroke()}
+  if(showLab||(inSub&&o.subLabels)){c.font=`${inSub?700:400} ${lf}px JetBrains Mono`;c.textAlign='left';c.fillStyle=inSub?'#bff7ff':'rgba(190,225,245,.7)';c.fillText('P'+p.id,x+r+2,y-r-1)}}
+ const pul=.5+.5*Math.sin((ts||0)/260),tri=(ids,col,dash)=>{if(ids.length<2)return;c.save();c.strokeStyle=col;c.lineWidth=1.4;c.setLineDash(dash);c.beginPath();ids.forEach((i,k)=>k?c.lineTo(px(pts[i].x),py(pts[i].y)):c.moveTo(px(pts[i].x),py(pts[i].y)));c.closePath();c.stroke();c.restore()};
+ if(o.cur){tri(o.cur,'rgba(255,180,84,.7)',[5,4]);o.cur.forEach(i=>{c.save();c.strokeStyle='#ffb454';c.lineWidth=2;c.setLineDash([3,3]);c.beginPath();c.arc(px(pts[i].x),py(pts[i].y),10,0,7);c.stroke();c.restore()})}
+ if(o.cbest){tri(o.cbest,'rgba(255,180,84,.5)',[]);o.cbest.forEach((i,k)=>{const x=px(pts[i].x),y=py(pts[i].y);c.save();c.shadowColor='#ffb454';c.shadowBlur=14;c.fillStyle='rgba(255,180,84,.28)';c.strokeStyle='#ffb454';c.lineWidth=2.6;c.fillRect(x-11,y-11,22,22);c.strokeRect(x-11,y-11,22,22);c.restore();
+  c.fillStyle='#ffe3b0';c.font=`800 ${fs}px Manrope`;c.textAlign='center';c.fillText('P'+(i+1),x,y+24+fs*.4)})}
+ if(o.qbest){tri(o.qbest,'rgba(160,140,255,.6)',[]);o.qbest.forEach(i=>{const x=px(pts[i].x),y=py(pts[i].y);c.save();c.shadowColor='#7cf0ff';c.shadowBlur=18+8*pul;c.fillStyle='rgba(160,110,255,.35)';c.strokeStyle='#fff';c.lineWidth=2.6;c.beginPath();c.arc(x,y,13,0,7);c.fill();c.stroke();c.restore();
+  c.fillStyle='#fff';c.beginPath();c.arc(x,y,3,0,7);c.fill();c.fillStyle='#bff7ff';c.font=`800 ${fs}px Manrope`;c.textAlign='center';c.fillText('P'+(i+1),x,y-19)})}}
+
+function statsHTML(){const{cfg,grid,N,total}=U2,area=cfg.W*cfg.H;
+ return `<div class="kvg"><div><span>FARM</span><b>${cfg.W} m × ${cfg.H} m</b></div><div><span>AREA (CALCULATED)</span><b>${area.toFixed(1)} m² · ${(area/ACRE).toFixed(3)} acre</b></div><div><span>GRID SPACING</span><b>${cfg.s} m</b></div><div><span>GRID</span><b>${grid.rows} rows × ${grid.cols} columns</b></div><div><span>VALID CANDIDATES N</span><b>${f2n(N)}</b></div><div><span>REQUIRED SENSORS</span><b>exactly 3</b></div></div>
+ <div class="fml mono">C(N,3) = N! / (3!·(N−3)!) = N(N−1)(N−2)/6 = ${f2n(N)}·${f2n(N-1)}·${f2n(N-2)} / 6 = ${f2n(total)} possible three-sensor placements</div>
+ <div class="note2">Grid policy: origin at the south-west corner; installation points at x = i·s (0 ≤ x ≤ W) and y = j·s (0 ≤ y ≤ H); boundary points are included, anything outside the rectangle is excluded. These ${cfg.s} m installation points are different from the 2 m × 2 m source zones of Use Case 1. Reference: 1 acre = ${ACRE.toLocaleString('en-US')} m².</div>`}
+
+function detHTML(){const{model:M,cfg,pts}=U2,rows=Math.min(M.N,40);
+ let h=`<b>Detection scenarios &amp; detection matrix D</b><div class="note2" style="margin:6px 0">${cfg.S} hypothetical disease-source / wind scenarios. D<sub>ij</sub> is a <b>dimensionless detection score (0–1)</b> for candidate i under scenario j from a simplified wind-aware, plume-inspired model: a Gaussian cross-wind profile (σ = 2.5 + 0.22·downwind m) times downwind decay exp(−a/(14+6u)) (fast upwind decay). It is a simulation aid — <b>not</b> a BME688 measurement, calibrated VOC concentration, or validated detection accuracy.</div>
+ <div class="mono" style="font-size:11px;color:var(--mu);line-height:1.6">${M.scen.map((s,j)=>`S${j+1}: source (${s.sx}, ${s.sy}) m · wind→${s.deg}° · ${s.u} m/s`).join('<br>')}</div>
+ <div class="dtw"><table class="dt mono"><tr><th>Candidate</th>${M.scen.map((_,j)=>`<th>S${j+1}</th>`).join('')}<th>mean</th></tr>`;
+ for(let i=0;i<rows;i++)h+=`<tr><td>P${i+1} (${pts[i].x},${pts[i].y})</td>${M.scen.map((_,j)=>`<td>${M.D[i*M.S+j].toFixed(2)}</td>`).join('')}<td style="color:#fff">${M.L[i].toFixed(2)}</td></tr>`;
+ return h+`</table></div><div class="note2" style="margin-top:6px">Matrix size ${f2n(M.N)} × ${cfg.S}; showing first ${rows} rows. Row = candidate position, column = scenario.</div>`}
+
+function quboHTML(){const{model:M,cfg,sub,qubo}=U2,N=M.N;let cmin=Infinity,cmax=-Infinity,qmin=Infinity,qmax=-Infinity;
+ for(let i=0;i<N;i++){const c=-M.L[i]-5*M.P;cmin=Math.min(cmin,c);cmax=Math.max(cmax,c);for(let k=i+1;k<N;k++){const q=M.CP[i*N+k]+M.mu*M.R[i*N+k]+M.nu*M.SEP[i*N+k]+2*M.P;qmin=Math.min(qmin,q);qmax=Math.max(qmax,q)}}
+ U2.qrange={cmin,cmax,qmin,qmax};
+ return `<b>Objective &amp; QUBO</b>
+ <div class="fml mono">C(x) = −Coverage(x) + μ·Redundancy(x) + ν·Separation(x) + P·(Σxᵢ − 3)²
+Coverage(x)   = (1/S) Σⱼ [ Σᵢ Dᵢⱼxᵢ − Σᵢ&lt;ₖ Dᵢⱼ·Dₖⱼ xᵢxₖ ]   (2nd-order inclusion–exclusion)
+Redundancy(x) = Σᵢ&lt;ₖ cos(Dᵢ·, Dₖ·) xᵢxₖ        (similar response profiles)
+Separation(x) = Σᵢ&lt;ₖ [dᵢₖ &lt; d_min] xᵢxₖ        (too-close pairs)</div>
+ <div class="fml mono">QUBO: C(x) = xᵀQx + cᵀx + const
+cᵢ = −mean_j Dᵢⱼ − 5P ,  Qᵢₖ = mean_j DᵢⱼDₖⱼ + μ·cosᵢₖ + ν·[dᵢₖ&lt;d_min] + 2P ,  const = 9P
+(P(Σx−3)² = P(Σxᵢ² + 2Σxᵢxₖ − 6Σxᵢ + 9), xᵢ² = xᵢ)</div>
+ <div class="kvg"><div><span>S SCENARIOS</span><b>${cfg.S}</b></div><div><span>μ · ν · P</span><b>${M.mu} · ${M.nu} · ${M.P.toFixed(1)}</b></div><div><span>d_min</span><b>${cfg.dmin} m (${f2n(M.nsep)} violating pairs)</b></div><div><span>FULL QUBO</span><b>${f2n(N)} variables · ${f2n(N*(N-1)/2)} couplings</b></div><div><span>c RANGE</span><b>${cmin.toFixed(2)} … ${cmax.toFixed(2)}</b></div><div><span>Q RANGE</span><b>${qmin.toFixed(2)} … ${qmax.toFixed(2)}</b></div></div>
+ <div class="note2" style="margin:4px 0 6px"><b>Reduced QAOA subset</b> (explicit): ${sub.length} of ${f2n(N)} candidates — highest single-position coverage, spread ≥ ${Math.max(cfg.s,cfg.dmin/2)} m apart: <span class="mono">${sub.map(i=>'P'+(i+1)).join(', ')}</span>. Heat-map below = this ${sub.length}×${sub.length} sub-QUBO (diagonal = linear terms cᵢ, off-diagonal = Qᵢₖ; brightness normalised within each group).</div>
+ <canvas id="qm" width="360" height="360" style="max-width:380px;margin:0 auto"></canvas>`}
+function drawQM(){const cv=$('qm');if(!cv)return;const c=cv.getContext('2d'),{qubo:q,sub}=U2,n=q.n,lm=34,cs=(360-lm)/n;c.clearRect(0,0,360,360);
+ let omin=Infinity,omax=-Infinity,dmn=Infinity,dmx=-Infinity;for(let i=0;i<n;i++){dmn=Math.min(dmn,q.c[i]);dmx=Math.max(dmx,q.c[i]);for(let k=i+1;k<n;k++){omin=Math.min(omin,q.Q[i*n+k]);omax=Math.max(omax,q.Q[i*n+k])}}
+ c.font='9px JetBrains Mono';c.textAlign='center';c.textBaseline='middle';
+ for(let i=0;i<n;i++){c.fillStyle='#9fb6d6';c.fillText('P'+(sub[i]+1),lm+(i+.5)*cs,lm*.5);c.textAlign='right';c.fillText('P'+(sub[i]+1),lm-3,lm+(i+.5)*cs);c.textAlign='center';
+  for(let k=0;k<n;k++){let col;if(i==k){const u=(q.c[i]-dmn)/(dmx-dmn+1e-12);col=`hsla(185,100%,${35+30*(1-u)}%,${.5+.5*(1-u)})`}else{const v=q.Q[Math.min(i,k)*n+Math.max(i,k)],u=(v-omin)/(omax-omin+1e-12);col=`hsla(275,100%,${30+40*u}%,${.35+.65*u})`}
+   c.fillStyle=col;c.fillRect(lm+k*cs+1,lm+i*cs+1,cs-2,cs-2)}}}
+
+const popc=Core.popcount;
+function q2Prep(){const{q}=U2,n=q.n,NS=1<<n,M=U2.model;q.pc3=[];q.feas=new Uint8Array(NS);q.idsOf=m=>{const r=[];for(let i=0;i<n;i++)if(m>>i&1)r.push(q.sub[i]);return r};
+ for(let m=0;m<NS;m++)if(popc(m)===3){q.pc3.push(m);if(Core.terms(M,q.idsOf(m)).feasible)q.feas[m]=1}
+ q.cur=new Float64Array(NS);q.live={probs:new Float64Array(NS).fill(1/NS),evals:0,best:NaN}}
+function q2Probs(){const q=U2.q;if(q.res){const now=performance.now()-q.replayStart,prog=clamp(now/3200),f=clamp(prog/.85)*q.p,a=Math.min(q.p,Math.floor(f)),b=Math.min(q.p,a+1),fr=a>=q.p?0:sm(f-a),S0=q.res.snaps[a],S1=q.res.snaps[b];
+  for(let i=0;i<q.cur.length;i++)q.cur[i]=S0[i]*(1-fr)+S1[i]*fr;return{p:q.cur,prog,f,a,fr}}
+ return{p:q.live.probs,prog:0,f:0,a:0,fr:0}}
+function topPc3(pr){const L=U2.q.pc3;let b=L[0];for(const m of L)if(pr[m]>pr[b])b=m;return b}
+
+function clHTML(){const cl=U2.cl;if(!cl)return '';const L=cl.live,now=cl.status==='running'?performance.now()-cl.t0:cl.ms,tot=U2.total,pct=Number(BigInt(L.count)*10000n/tot)/100,
+ stat=cl.status==='running'?'<span class="chip2 go">Running</span>':cl.status==='Completed'?'<span class="chip2 ok">Completed</span>':'<span class="chip2 to">Timed out</span>',B=U2.bench;
+ return `${stat} <span class="mono" style="color:var(--mu);font-size:12px">${fmtDur(now)} elapsed · timeout ${fmtDur(U2.cfg.to)}</span><div class="prog"><i style="width:${pct}%"></i></div>
+ <div class="kv">Configurations evaluated<b>${f2n(L.count)} / ${f2n(tot)} (${pct.toFixed(pct<1?3:1)}%)</b></div>
+ <div class="kv">Current combination<b>${idl(L.cur)} · cost ${L.curCost.toFixed(4)}</b></div>
+ <div class="kv">Best feasible so far<b>${L.best?idl(L.best)+' · cost '+L.bestCost.toFixed(4):'none yet'}</b></div>
+ <div class="kv">Throughput<b>${(L.count/Math.max(1,now)/1000).toFixed(1)}M evals/s</b></div>
+ ${B?`<div class="kv">Estimated exhaustive time (extrapolated)<b>${fmtDur(Number(tot)/B.rate*1000)}</b></div>`:''}`}
+function qHTML(){const q=U2.q;if(!q)return '';const sp=q2Probs(),pr=sp.p,NS=pr.length,top=q.pc3.slice().sort((x,y)=>pr[y]-pr[x]).slice(0,6),pm=q.pmaxF||Math.max(...top.map(i=>pr[i]),1e-12),meas=q.res&&performance.now()-q.replayStart>3200;
+ const head=!q.res?`<div style="color:#7cf0ff;font-weight:800;font-size:12px">OPTIMISING γ, β · start ${(q.live.start||0)+1}/${q.live.starts||4} · ${f2n(q.live.evals)} circuit evaluations</div>`:
+  `<div style="color:#7cf0ff;font-weight:800;font-size:12px">${meas?'MEASUREMENT · '+f2n(q.shots)+' shots':sp.prog>=.85?'OPTIMISED (γ*, β*) · final distribution':sp.a==0&&sp.fr<.05?'INITIAL |+⟩ · uniform superposition':`STATE AFTER LAYER ${Math.min(q.p,Math.ceil(sp.f))} of ${q.p}`}</div>`;
+ let h=head+`<div style="color:#b9c6ff;font-size:12px;margin:3px 0 8px"><b class="mono" style="color:#fff">${q.n}</b> qubits = ${q.n} of ${f2n(U2.N)} candidates · ${f2n(NS)} basis states · p = ${q.p}${q.res?' · simulated '+fmtDur(q.res.simMs):''}</div>`+
+ top.map(i=>`<div class="pb w${meas&&q.best&&i===q.best.m?' win':''}"><span class="mono" style="font-size:11px">${idl(q.idsOf(i))}${q.feas[i]?' ✓':''}</span><span class="tr"><i style="width:${Math.max(1,pr[i]/pm*100)}%"></i></span><b class="mono">${(pr[i]*100).toFixed(2)}%</b></div>`).join('')+
+ `<div style="color:var(--mu);font-size:11px;margin-top:4px">Top-6 three-sensor configurations by current probability (✓ = separation met). Uniform start = ${(100/NS).toFixed(3)}% each.</div>`;
+ if(meas&&q.best)h+=`<div style="margin-top:8px"><b style="color:#7cf0ff">QAOA BEST FEASIBLE PLACEMENT</b><div class="big win" style="color:#bfefff;font-size:16px">${idl(q.best.ids)}</div>Probability <b class="mono">${(q.res.final[q.best.m]*100).toFixed(2)}%</b> · Cost <b class="mono">${q.best.t.cost.toFixed(4)}</b></div>`;
+ return h}
+
+function draw2(ts){if(!U2||!U2.drawStart)return;const el=performance.now()-U2.drawStart,bt=clamp(el/1100),pt=clamp((el-1100)/1500),cl=U2.cl,q=U2.q;
+ const cfin=cl&&cl.status!=='running'&&cl.final?cl.final.ids:null,qfin=q&&q.best&&q.res&&performance.now()-q.replayStart>3200?q.best.ids:null,sub=q?new Set(q.sub):U2.sub?new Set(U2.sub):null;
+ drawFarm2(U2cv.f,{bt,pt,labels:true,subset:sub,cbest:cfin,qbest:qfin},ts);
+ if(U2.cl){drawFarm2(U2cv.c,{bt:1,pt:1,labels:false,cur:cl.status==='running'?cl.live.cur:null,cbest:cl.status==='running'?cl.live.best:cfin},ts);const h=clHTML();if(U2.hc!==h){U2.hc=h;$('c2info').innerHTML=h}}
+ if(U2.q){const sp=q2Probs();let live=null;const top=q.pc3?topPc3(sp.p):null;if(top!=null)live=q.idsOf(top);
+  drawFarm2(U2cv.q,{bt:1,pt:1,labels:false,subset:new Set(q.sub),subLabels:true,qbest:qfin||live},ts);
+  dots(qs2c,400,340,sp.p,q.feas,q.best&&qfin?q.best.m:-1,ts);const h=qHTML();if(U2.hq!==h){U2.hq=h;$('q2info').innerHTML=h}}}
+const qs2c=$('qs2').getContext('2d');
+
+function fillRes2(){const{cl,q,cfg,total,bench:B}=U2,tm=(r)=>r?`<div class="kv">Selected candidate IDs<b>${idl(r.ids)}</b></div><div class="kv">Coordinates (x, y) in m<b style="font-size:11px">${idc(r.ids)}</b></div><div class="kv">Coverage score (mean of ${cfg.S} scenarios)<b>${r.t.cov.toFixed(4)}</b></div><div class="kv">Redundancy penalty<b>${r.t.red.toFixed(4)}</b></div><div class="kv">Separation penalty<b>${r.t.sep.toFixed(4)}</b></div><div class="kv">Final objective cost<b>${r.t.cost.toFixed(4)}</b></div>
+  <div class="kv">Exactly three sensors<b class="${r.t.m===3?'good':'bad'}">${r.t.m===3?'✓ satisfied (3)':'✗ violated ('+r.t.m+')'}</b></div><div class="kv">Min. separation ≥ ${cfg.dmin} m<b class="${r.t.nsv===0?'good':'bad'}">${r.t.nsv===0?'✓ satisfied':'✗ violated'} (closest pair ${r.t.minD.toFixed(1)} m)</b></div>`:'<div class="kv">Result<b>no feasible placement found</b></div>';
+ const clStat=cl.status==='Completed'?'Completed — all '+f2n(cl.count)+' evaluated':'TIMED OUT — '+f2n(cl.count)+' of '+f2n(total)+' evaluated; best-so-far shown';
+ const est=Number(total)/B.rate*1000,delta=cl.final&&q.best?(q.best.t.cost-cl.final.t.cost):null;
+ $('u2resbox').innerHTML=`<div class="res"><div class="box" style="border-color:rgba(255,180,84,.45)"><div style="color:var(--cl);font-weight:800;letter-spacing:.08em">CLASSICAL · BEST FEASIBLE PLACEMENT</div><div class="kv">Search status<b class="${cl.status==='Completed'?'good':'bad'}">${clStat}</b></div>${tm(cl.final)}<div class="kv">Measured runtime<b>${fmtDur(cl.ms)}</b></div></div>
+ <div class="box" style="border-color:rgba(143,162,255,.5)"><div style="color:var(--qu);font-weight:800;letter-spacing:.08em">QAOA · BEST FEASIBLE PLACEMENT</div><div class="kv">Method<b>${q.n} qubits (reduced subset of ${f2n(U2.N)}), p = ${q.p}, ${f2n(q.shots)} shots</b></div>${tm(q.best)}<div class="kv">Measured runtime (statevector simulation)<b>${fmtDur(q.res.simMs)}</b></div></div></div>
+ <div class="box"><b>Runtime accounting</b><table class="tm" style="margin-top:8px">
+ <tr><td>Classical measured runtime</td><td><b>${fmtDur(cl.ms)}</b> — actual wall-clock time of the reference search (${cl.status.toLowerCase()}, ${f2n(cl.count)} evaluations, ${(cl.count/cl.ms/1000).toFixed(1)}M/s).</td></tr>
+ <tr><td>Classical estimated exhaustive-search time</td><td><b>${fmtDur(est)}</b> <i>(estimate)</i> = C(N,3) ÷ benchmarked throughput = ${f2n(total)} ÷ ${f2n(Math.round(B.rate))} evals/s (benchmark: ${f2n(B.n)} evaluations in ${fmtDur(B.ms)}). An extrapolation, not an actual run${cl.status==='Completed'?'; here the full search did complete, so the measured runtime above is the real figure':''}.</td></tr>
+ <tr><td>QAOA measured runtime</td><td><b>${fmtDur(q.res.simMs)}</b> — classical <i>statevector simulation</i> of ${q.n} qubits (${f2n(q.res.evals)} circuit evaluations, compute time excluding UI waits). Not quantum-hardware time.</td></tr>
+ <tr><td>Projected quantum-hardware runtime</td><td><b>not projected</b> — no defensible hardware model (gate times, shots, queueing, error mitigation) is available, so no speed-up is claimed.</td></tr></table></div>
+ <div class="box" style="margin-top:16px"><b>Comparison</b><div class="kv">QAOA vs classical objective<b>${delta==null?'n/a':(Math.abs(delta)<1e-9?'identical placement cost':'ΔC = '+delta.toExponential(2)+(delta>0?' (QAOA is worse — it can only choose among '+q.n+' candidates)':cl.status!=='Completed'?' (QAOA beat the timed-out classical best-so-far; the classical search was incomplete)':''))}</b></div>
+ <div class="kv">Best feasible placement inside the QAOA subset (exact)<b>${idl(q.subOpt.ids)} · ${q.subOpt.t.cost.toFixed(4)}</b></div>
+ <div class="kv">Probability mass on feasible 3-sensor states<b>${(q.feasMass*100).toFixed(1)}% (uniform start: ${(q.feasUniform*100).toFixed(1)}%)</b></div>
+ <div class="kv">Check: QUBO/Ising energy vs direct objective, all ${f2n(1<<q.n)} bitstrings<b>max |Δ| = ${q.chk.toExponential(1)}</b></div>
+ <div class="kv">Check: fast search cost vs direct objective (best feasible)<b>max |Δ| = ${cl.final?Math.abs(cl.final.t.cost-cl.final.fast).toExponential(1):'n/a'}</b></div></div>
+ <div class="note">Detection scores come from a simplified plume-inspired simulation; they are not BME688 measurements or validated detection accuracy. The QAOA runs on a classical simulator over a reduced candidate subset.</div>`}
+
+async function runUC2(){
+ const id=++runId2,ok=()=>id===runId2;
+ const cfg=readCfg();if(typeof cfg==='string'){$('err2').textContent=cfg;return}$('err2').textContent='';
+ const grid=Core.buildCandidates(cfg.W,cfg.H,cfg.s),N=grid.N;
+ if(N<3||N>1500){$('err2').textContent=`Grid gives ${N} candidates; need 3 ≤ N ≤ 1500. Adjust spacing or farm size.`;return}
+ cfg.nq=Math.min(cfg.nq,N);if(cfg.nq<6){$('err2').textContent='Need at least 6 candidates for the QAOA subset.';return}
+ ['u2mid','u2cmp','u2res'].forEach(i=>$(i).classList.remove('on'));$('u2stats').innerHTML='';
+ U2={cfg,pts:grid.pts,grid,N,total:Core.choose(N,3),drawStart:performance.now(),cl:null,q:null,sub:null};
+ sizeCanvas(U2cv.f,960,cfg,720);sizeCanvas(U2cv.c,620,cfg,480);sizeCanvas(U2cv.q,620,cfg,480);
+ $('run2').disabled=true;
+ try{
+  $('u2stage').classList.add('on');setPhase2('1/9 Drawing rectangular farm');$('u2stage').scrollIntoView({behavior:'smooth',block:'start'});
+  await sleep(1150);if(!ok())return;setPhase2('2/9 Generating candidate positions');await sleep(1650);if(!ok())return;
+  setPhase2('3/9 Counting candidates and combinations');$('u2stats').innerHTML=statsHTML();await sleep(900);if(!ok())return;
+  setPhase2('4/9 Generating scenarios and detection matrix D');
+  const scen=Core.genScenarios(cfg.S,cfg.W,cfg.H,2026);U2.model=Core.buildModel(grid.pts,scen,cfg.dmin,cfg.s);
+  $('u2mid').classList.add('on');$('u2det').innerHTML=detHTML();await sleep(900);if(!ok())return;
+  setPhase2('5/9 Constructing objective and QUBO');
+  U2.sub=Core.pickSubset(U2.model,cfg.nq,cfg.dmin);U2.qubo=Core.buildQUBO(U2.model,U2.sub);$('u2qubo').innerHTML=quboHTML();drawQM();await sleep(1100);if(!ok())return;
+  // ---- classical reference with hard timeout ----
+  setPhase2('6/9 Classical exhaustive reference search');$('u2cmp').classList.add('on');
+  const bs=Core.makeSearch(U2.model),tb=performance.now();bs.run(250);const bms=performance.now()-tb;U2.bench={n:bs.count,ms:bms,rate:bs.count/bms*1000};
+  const sr=Core.makeSearch(U2.model),t0=performance.now();
+  U2.cl={status:'running',t0,ms:0,count:0,final:null,live:{count:0,cur:[0,1,2],curCost:0,best:null,bestCost:NaN}};
+  while(true){const el=performance.now()-t0,left=cfg.to-el;if(left<=0){break}
+   const fin=sr.run(Math.min(25,left));U2.cl.live={count:sr.count,cur:sr.cur,curCost:sr.curCost,best:sr.bestF.ids,bestCost:sr.bestF.cost};
+   if(fin)break;await tick();if(!ok())return}
+  const cms=performance.now()-t0,done=sr.done;
+  U2.cl.ms=cms;U2.cl.count=sr.count;U2.cl.status=done?'Completed':'Timed out';
+  if(sr.bestF.ids){const ids=sr.bestF.ids;U2.cl.final={ids,t:Core.terms(U2.model,ids),fast:sr.bestF.cost}}
+  U2.cl.live={count:sr.count,cur:sr.cur,curCost:sr.curCost,best:sr.bestF.ids,bestCost:sr.bestF.cost};
+  await sleep(700);if(!ok())return;
+  // ---- QAOA ----
+  setPhase2('7/9 QAOA optimisation (reduced subset, statevector simulation)');
+  const q={n:U2.sub.length,p:cfg.p,sub:U2.sub,qubo:U2.qubo,shots:4096};U2.q=q;q2Prep();
+  const is=Core.isingFromQubo(q.qubo),diag=Core.isingDiag(is);
+  const res=await Core.qaoa(diag,q.n,q.p,{seed:31,yieldFn:async info=>{if(!ok())throw new Error('cancelled');q.live={evals:info.evals,best:info.best,probs:info.getProbs(),start:info.start,starts:info.starts};await tick();if(!ok())throw new Error('cancelled')}});
+  const NS=1<<q.n;let chk=0;for(let m=0;m<NS;m++)chk=Math.max(chk,Math.abs(diag[m]-Core.terms(U2.model,q.idsOf(m)).cost));
+  q.chk=chk;q.res=res;
+  const cnt=Core.sampleShots(res.final,q.shots,5);let best=null;
+  for(const[m,c]of cnt){if(!q.feas[m])continue;const ids=q.idsOf(m),t=Core.terms(U2.model,ids);if(!best||t.cost<best.t.cost-1e-12)best={m,ids,t,shots:c}}
+  if(!best){let bm=q.pc3.filter(m=>q.feas[m]).sort((a,b)=>res.final[b]-res.final[a])[0];if(bm!=null){const ids=q.idsOf(bm);best={m:bm,ids,t:Core.terms(U2.model,ids),shots:0}}}
+  q.best=best;q.pmaxF=Math.max(...q.pc3.map(m=>res.final[m]));let sm0=null,fm=0;for(const m of q.pc3)if(q.feas[m]){fm+=res.final[m];const t=Core.terms(U2.model,q.idsOf(m));if(!sm0||t.cost<sm0.t.cost)sm0={ids:q.idsOf(m),t}}
+  q.subOpt=sm0||{ids:[],t:{cost:NaN}};q.feasMass=fm;q.feasUniform=q.pc3.filter(m=>q.feas[m]).length/NS;
+  if(!best){setPhase2('No feasible QAOA sample');$('err2').textContent='QAOA produced no feasible three-sensor sample for these settings.';return}
+  setPhase2('8/9 Visualising state probabilities');q.replayStart=performance.now();
+  await sleep(3500);if(!ok())return;
+  setPhase2('9/9 Final placement & comparison');fillRes2();$('u2res').classList.add('on');$('u2res').scrollIntoView({behavior:'smooth',block:'start'});
+ }catch(e){if(e.message!=='cancelled'){console.error(e);$('err2').textContent='Error: '+e.message}}
+ finally{if(ok())$('run2').disabled=false}}
+$('run2').onclick=runUC2;
+
+/* ===================== tabs + main loop ===================== */
+let active=1;function tab(k){active=k;$('uc1').classList.toggle('on',k==1);$('uc2').classList.toggle('on',k==2);$('tab1').setAttribute('aria-selected',k==1);$('tab2').setAttribute('aria-selected',k==2)}
+$('tab1').onclick=()=>tab(1);$('tab2').onclick=()=>tab(2);
+let last=0;
+function frame(ts){const dt=Math.min(50,ts-last);last=ts;
+ try{if(active==1){if(ready){if(playing){T=Math.min(qr?END:SP-1,T+dt);if(T>=END)playing=false}render(T,dt,ts)}}else draw2(ts)}catch(e){console.error(e)}
+ requestAnimationFrame(frame)}
+requestAnimationFrame(frame);
+</script></body></html>
