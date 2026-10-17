@@ -1,0 +1,8 @@
+{
+  "name": "Remix Copy of BIO-SNIFF",
+  "description": "AI-powered crop health intelligence using VOC sensing, field data, and precision localization to help farmers act early and protect their yield.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
